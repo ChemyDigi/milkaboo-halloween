@@ -33,12 +33,19 @@ function subscribeMuted(cb: () => void) {
   };
 }
 
+/** the remembered mute switch, shared by the site soundtrack and the game sounds (Howler mutes globally) */
+export function useMuted() {
+  const muted = useSyncExternalStore(subscribeMuted, readMuted, () => false);
+  const toggleMute = useCallback(() => writeMuted(!readMuted()), []);
+  return { muted, toggleMute };
+}
+
 /**
  * Howler sounds for the game. Files live in /public/sounds (placeholders made by scripts/generate-sounds.mjs).
  * Sounds load on the first `unlock()` (call it from a tap) so the intro screen downloads nothing extra.
  */
 export function useSounds() {
-  const muted = useSyncExternalStore(subscribeMuted, readMuted, () => false);
+  const { muted, toggleMute } = useMuted();
   const howls = useRef<Record<string, Howl> | null>(null);
 
   useEffect(() => {
@@ -85,8 +92,6 @@ export function useSounds() {
     const ambient = howls.current?.ambient;
     if (ambient) ambient.fade(ambient.volume(), level * vol.ambient, 600);
   }, []);
-
-  const toggleMute = useCallback(() => writeMuted(!readMuted()), []);
 
   return { muted, toggleMute, unlock, play, setSuction, setAmbience };
 }
