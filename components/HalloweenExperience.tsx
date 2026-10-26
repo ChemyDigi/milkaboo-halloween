@@ -925,7 +925,7 @@ export default function HalloweenExperience() {
                     <Gamepad2 className="h-5 w-5" />
                     <span>
                       {selectedFlavor.game === "custard" && "Play Casper's Jigsaw"}
-                      {selectedFlavor.game === "apple" && "Play Apple Boba Catch"}
+                      {selectedFlavor.game === "apple" && "Play Boba Drop"}
                       {selectedFlavor.game === "beast" && "Play Beast's Cup Shuffle"}
                       {selectedFlavor.game === "rose" && "Free the Rose Cup"}
                     </span>
