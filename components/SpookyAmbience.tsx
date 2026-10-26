@@ -10,7 +10,7 @@ const VOLUME = 0.45;
 const FADE_MS = 800;
 
 /**
- * The site's looping background soundtrack (made by scripts/generate-sounds.mjs). Browsers block audio until the
+ * The site's looping background soundtrack (public/sounds/homebackground.mp3). Browsers block audio until the
  * visitor interacts, so it loads and starts on the first tap/click/key. `paused` fades it out, e.g. while a game
  * is open: the game has its own sounds, and the Wicked Rose mic would hear the music.
  */
@@ -27,7 +27,7 @@ export default function SpookyAmbience({ paused }: { paused: boolean }) {
     const events = ["pointerdown", "keydown", "touchend"] as const;
     const start = () => {
       events.forEach((e) => window.removeEventListener(e, start));
-      howl.current = new Howl({ src: ["/sounds/site-ambience.wav"], loop: true, volume: 0 });
+      howl.current = new Howl({ src: ["/sounds/homebackground.mp3"], loop: true, volume: 0 });
       if (!pausedRef.current) {
         howl.current.play();
         howl.current.fade(0, VOLUME, FADE_MS * 3);

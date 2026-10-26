@@ -4,8 +4,11 @@ import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { Howl, Howler } from "howler";
 import { gameConfig } from "@/lib/gameConfig";
 
-export type SfxName = "wail" | "shloop" | "win" | "laugh";
+export type SfxName = "wail" | "shloop" | "win" | "laugh" | "scream";
+/** a game can swap in its own recordings by path, e.g. its own music as `ambient`; `scream` only plays if given one */
+export type SoundFiles = Partial<Record<SfxName | "ambient", string>>;
 
+const NO_FILES: SoundFiles = {};
 const MUTE_KEY = "milkaboo-ghost-muted";
 const vol = gameConfig.sound;
 
@@ -43,8 +46,9 @@ export function useMuted() {
 /**
  * Howler sounds for the game. Files live in /public/sounds (placeholders made by scripts/generate-sounds.mjs).
  * Sounds load on the first `unlock()` (call it from a tap) so the intro screen downloads nothing extra.
+ * Pass `files` as a module-level constant: it's read when the sounds load.
  */
-export function useSounds() {
+export function useSounds(files: SoundFiles = NO_FILES) {
   const { muted, toggleMute } = useMuted();
   const howls = useRef<Record<string, Howl> | null>(null);
 
@@ -61,8 +65,8 @@ export function useSounds() {
 
   const unlock = useCallback(() => {
     if (howls.current) return;
-    const make = (name: string, volume: number, loop = false) =>
-      new Howl({ src: [`/sounds/${name}.wav`], volume, loop, preload: true });
+    const make = (name: SfxName | "ambient" | "slurp", volume: number, loop = false) =>
+      new Howl({ src: [(name !== "slurp" && files[name]) || `/sounds/${name}.wav`], volume, loop, preload: true });
     howls.current = {
       ambient: make("ambient", vol.ambient, true),
       slurp: make("slurp", 0, true),
@@ -70,9 +74,10 @@ export function useSounds() {
       shloop: make("shloop", vol.sfx),
       win: make("win", vol.sfx),
       laugh: make("laugh", vol.sfx),
+      ...(files.scream && { scream: make("scream", vol.sfx) }),
     };
     howls.current.ambient.play();
-  }, []);
+  }, [files]);
 
   const play = useCallback((name: SfxName) => {
     howls.current?.[name]?.play();

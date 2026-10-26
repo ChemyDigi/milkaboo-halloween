@@ -14,7 +14,7 @@ import {
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { CupSoda, Flame, Heart, Hourglass, RotateCcw, Skull, Timer, Trophy, Zap } from "lucide-react";
-import { useSounds } from "@/hooks/useSounds";
+import { useSounds, type SoundFiles } from "@/hooks/useSounds";
 import { useReducedMotion } from "@/hooks/useDeviceTier";
 import MuteButton from "@/components/MuteButton";
 
@@ -33,6 +33,12 @@ const BACKDROP = "/games/haunted-apple/Moonlit Haunted Lake Terrace (1).png";
 const GHOST_SRC = "/games/haunted-apple/Neon Ghost Riding a Mystic Broom.png";
 /** the scare, red-eyed: bats, things watching from the dark, a spider on its thread */
 const EYE = "#ff4d2e";
+/** the game's own music, the Phantom's cackle, and a scream when the cup is lost */
+const SOUNDS: SoundFiles = {
+  ambient: "/sounds/background1.mp3",
+  laugh: "/sounds/Evillaugh.mp3",
+  scream: "/sounds/female.mp3",
+};
 
 /* ---------- the rules: tune the difficulty here ---------- */
 /** pearls to fill the cup */
@@ -663,7 +669,7 @@ function Stat({ label, value, color, children }: { label: string; value: string;
 }
 
 export default function HauntedAppleGame({ onClose }: Props) {
-  const { muted, toggleMute, unlock, play } = useSounds();
+  const { muted, toggleMute, unlock, play, setAmbience } = useSounds(SOUNDS);
   const reduceMotion = useReducedMotion();
   const best = useBest();
   const [phase, setPhase] = useState<Phase>("intro");
@@ -679,6 +685,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
 
   const start = () => {
     unlock();
+    setAmbience(1);
     stop();
     const el = area.current;
     if (!el) return;
@@ -742,7 +749,9 @@ export default function HauntedAppleGame({ onClose }: Props) {
         setNewBest(true);
       }
       setView(snapshot(s));
-      play(outcome === "won" ? "win" : "wail");
+      // the music drops back so the scream (or the fanfare) cuts through
+      setAmbience(0.35);
+      play(outcome === "won" ? "win" : "scream");
       setPhase(outcome === "won" ? "won" : "lost");
     };
 
