@@ -22,7 +22,15 @@ export default function CalibratingScreen() {
   return (
     <div className="game__safe items-center justify-between text-center">
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mt-8">
-        <h2 className="game__title text-[clamp(2rem,9vw,3rem)]">{copy.calibrating.title}</h2>
+        <h2
+          className="font-creepster text-[clamp(2rem,9vw,3rem)] uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
+          style={{
+            color: "#ff7cbe",
+            textShadow: "0 0 24px rgba(255, 124, 190, 0.5), 0 2px 10px rgba(0,0,0,0.9)",
+          }}
+        >
+          {copy.calibrating.title}
+        </h2>
         <p className="mt-2 text-(--g-muted)">{copy.calibrating.body}</p>
       </motion.div>
       <div className="mb-[18vh] grid h-32 place-items-center" aria-live="assertive">

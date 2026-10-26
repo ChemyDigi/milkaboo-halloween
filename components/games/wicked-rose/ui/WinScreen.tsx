@@ -23,7 +23,13 @@ export default function WinScreen({ onDone }: Props) {
         <div className="mx-auto mb-3 flex size-16 items-center justify-center rounded-full bg-gradient-to-tr from-[#fed778] to-[#ff7cbe] text-[#241a33] shadow-[0_0_35px_rgba(255,124,190,0.7)]">
           <Trophy size={32} />
         </div>
-        <h2 className="game__title text-[clamp(2.4rem,10vw,4rem)] text-(--g-text) drop-shadow-[0_0_28px_rgb(255_179_122/0.8)]">
+        <h2
+          className="font-creepster text-[clamp(2.4rem,10vw,3.8rem)] uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
+          style={{
+            color: "#ff7cbe",
+            textShadow: "0 0 24px rgba(255, 124, 190, 0.6), 0 2px 10px rgba(0,0,0,0.9)",
+          }}
+        >
           {t.title}
         </h2>
         <p className="mt-2 text-base text-(--g-muted)">{t.body}</p>

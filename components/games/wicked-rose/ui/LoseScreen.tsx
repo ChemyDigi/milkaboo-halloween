@@ -18,7 +18,8 @@ export default function LoseScreen({ peak, busy = false, onRetry, onHome }: Prop
   return (
     <div className="game__safe justify-between">
       <motion.p
-        className="game__title mt-6 text-center text-[clamp(2rem,9vw,3rem)] text-(--g-danger) drop-shadow-[0_0_24px_rgb(255_59_92/0.6)]"
+        className="font-creepster mt-6 text-center text-[clamp(2rem,9vw,3rem)] uppercase tracking-wider text-(--g-danger) drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
+        style={{ textShadow: "0 0 24px rgba(255, 59, 92, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
         initial={{ opacity: 0, scale: 0.6, rotate: -6 }}
         animate={{ opacity: 1, scale: 1, rotate: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 14 }}

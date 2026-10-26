@@ -27,7 +27,19 @@
   padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right))
            max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
 }
-.game__title { font-family: var(--g-font-display), var(--g-font-text), system-ui, sans-serif; font-weight: 400; letter-spacing: 0; line-height: 0.95; }
+
+.font-creepster {
+  font-family: var(--font-creepster), "Creepster", cursive, sans-serif;
+  letter-spacing: 0.04em;
+}
+
+.game__title {
+  font-family: var(--font-creepster), "Creepster", var(--g-font-display), cursive, sans-serif;
+  font-weight: 400;
+  letter-spacing: 0.05em;
+  line-height: 1.05;
+  text-transform: uppercase;
+}
 /* the title flickers like a dying neon sign */
 @keyframes haunt-flicker {
   0%, 100% { opacity: 1; }

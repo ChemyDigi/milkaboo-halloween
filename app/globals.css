@@ -7,6 +7,7 @@
   --font-jamoa: var(--font-jamoa);
   --font-lato: var(--font-lato);
   --font-mainstay: var(--font-mainstay);
+  --font-creepster: var(--font-creepster);
 }
 
 /* ---------- tokens: colours from the brand ---------- */
@@ -80,3 +81,4 @@ a { color: inherit; }
 .font-jamoa { font-family: var(--font-jamoa); }
 .font-lato { font-family: var(--font-lato); }
 .font-mainstay { font-family: var(--font-mainstay); }
+.font-creepster { font-family: var(--font-creepster), "Creepster", cursive, sans-serif; letter-spacing: 0.04em; }
