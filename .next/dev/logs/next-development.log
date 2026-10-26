@@ -1,0 +1,8 @@
+{"timestamp":"00:00:00.452","source":"Server","level":"LOG","message":"- Cache Components enabled"}
+{"timestamp":"00:00:00.452","source":"Server","level":"LOG","message":"- Partial Prefetching enabled"}
+{"timestamp":"00:00:00.452","source":"Server","level":"LOG","message":"- Experiments (use with caution):"}
+{"timestamp":"00:00:00.452","source":"Server","level":"LOG","message":"  ✓ agentFeedback"}
+{"timestamp":"00:00:00.452","source":"Server","level":"LOG","message":""}
+{"timestamp":"00:00:01.676","source":"Browser","level":"INFO","message":"Download the React DevTools for a better development experience: https://react.dev/link/react-devtools"}
+{"timestamp":"00:00:54.886","source":"Browser","level":"WARN","message":"'oklab(0.999994 0.0000455678 0.0000200868 / 0.1)' is not an animatable color. Use the equivalent color code instead.. For more information and steps for solving, visit https://motion.dev/troubleshooting/color-not-animatable"}
+{"timestamp":"00:00:54.912","source":"Server","level":"WARN","message":"[browser] \"\\u001b[33m'oklab(0.999994 0.0000455678 0.0000200868 / 0.1)' is not an animatable color. Use the equivalent color code instead.. For more information and steps for solving, visit https://motion.dev/troubleshooting/color-not-animatable\\u001b[39m\" \"\\u001b[2m(<anonymous>)\\u001b[22m\""}

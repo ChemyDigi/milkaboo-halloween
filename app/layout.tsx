@@ -1,0 +1,47 @@
+import type { Metadata, Viewport } from "next";
+import { Lato } from "next/font/google";
+import localFont from "next/font/local";
+import "./globals.css";
+
+const bherisi = localFont({
+  src: "../public/fonts/Bherisi-Regular.ttf",
+  variable: "--font-bherisi",
+  display: "swap",
+});
+
+const jamoaScript = localFont({
+  src: "../public/fonts/JamoaScript.ttf",
+  variable: "--font-jamoa",
+  display: "swap",
+});
+
+const mainstay = localFont({
+  src: "../public/fonts/Mainstay.ttf",
+  variable: "--font-mainstay",
+  display: "swap",
+});
+
+const lato = Lato({
+  subsets: ["latin"],
+  weight: ["300", "400", "700", "900"],
+  variable: "--font-lato",
+  display: "swap",
+});
+
+export const metadata: Metadata = {
+  title: "Milkaboo - Free the Cup | Halloween",
+  description:
+    "The ghosts have taken over! Free the Milkaboo cup, win the challenge, and claim a FREE drink!",
+};
+
+export const viewport: Viewport = {
+  themeColor: "#0b0514",
+};
+
+export default function RootLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <html lang="en" className={`${bherisi.variable} ${jamoaScript.variable} ${lato.variable} ${mainstay.variable}`}>
+      <body>{children}</body>
+    </html>
+  );
+}

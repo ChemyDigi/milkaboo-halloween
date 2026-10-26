@@ -1,0 +1,25 @@
+/* [project]/app/mainstay_2ab8badc.module.css [app-client] (css) */
+@font-face {
+  font-family: mainstay;
+  src: url("../media/Mainstay-s.p.2tylogcg1eynl.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: mainstay Fallback;
+  src: local(Arial);
+  ascent-override: 78.13%;
+  descent-override: 26.04%;
+  line-gap-override: 0.0%;
+  size-adjust: 95.99%;
+}
+
+.mainstay_2ab8badc-module__FQzsla__className {
+  font-family: mainstay, mainstay Fallback;
+}
+
+.mainstay_2ab8badc-module__FQzsla__variable {
+  --font-mainstay: "mainstay", "mainstay Fallback";
+}
+
+/*# sourceMappingURL=app_mainstay_2ab8badc_module_css_1igg3k2-ikub5._.single.css.map*/

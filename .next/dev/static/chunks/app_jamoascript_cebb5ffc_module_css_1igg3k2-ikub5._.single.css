@@ -1,0 +1,25 @@
+/* [project]/app/jamoascript_cebb5ffc.module.css [app-client] (css) */
+@font-face {
+  font-family: jamoaScript;
+  src: url("../media/JamoaScript-s.p.1pzejwms0qfd2.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: jamoaScript Fallback;
+  src: local(Arial);
+  ascent-override: 119.19%;
+  descent-override: 38.71%;
+  line-gap-override: 10.36%;
+  size-adjust: 68.37%;
+}
+
+.jamoascript_cebb5ffc-module__gdgPKW__className {
+  font-family: jamoaScript, jamoaScript Fallback;
+}
+
+.jamoascript_cebb5ffc-module__gdgPKW__variable {
+  --font-jamoa: "jamoaScript", "jamoaScript Fallback";
+}
+
+/*# sourceMappingURL=app_jamoascript_cebb5ffc_module_css_1igg3k2-ikub5._.single.css.map*/

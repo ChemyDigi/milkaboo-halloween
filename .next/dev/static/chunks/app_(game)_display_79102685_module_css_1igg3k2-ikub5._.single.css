@@ -1,0 +1,25 @@
+/* [project]/app/(game)/display_79102685.module.css [app-client] (css) */
+@font-face {
+  font-family: display;
+  src: url("../media/Bherisi_Regular-s.p.3t4f6hg-6d4pz.ttf") format("truetype");
+  font-display: swap;
+}
+
+@font-face {
+  font-family: display Fallback;
+  src: local(Arial);
+  ascent-override: 92.41%;
+  descent-override: 23.1%;
+  line-gap-override: 0.0%;
+  size-adjust: 108.21%;
+}
+
+.display_79102685-module__a6fJUq__className {
+  font-family: display, display Fallback;
+}
+
+.display_79102685-module__a6fJUq__variable {
+  --g-font-display: "display", "display Fallback";
+}
+
+/*# sourceMappingURL=app_%28game%29_display_79102685_module_css_1igg3k2-ikub5._.single.css.map*/
