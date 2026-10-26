@@ -67,34 +67,6 @@ export const gameConfig = {
     rmsRelease: 8,
   },
 
-  limits: {
-    /** tries per device per day (counted on the server when a round starts) */
-    maxAttemptsPerDay: 3,
-    /** backup limit for the whole IP: shop wifi and carrier NAT share IPs, so keep it loose */
-    maxAttemptsPerIpPerDay: 30,
-    /** prizes one email can win over the whole campaign */
-    prizesPerEmail: 1,
-    /** prizes one device can win per day */
-    prizesPerDevicePerDay: 1,
-    /** free cups the server will hand out per day, across everyone */
-    dailyPrizeBudget: 50,
-    /** "day" for all the limits above is the calendar day in this time zone */
-    timeZone: "Asia/Colombo",
-  },
-
-  server: {
-    /** a session token from /api/game/start is only good for this long (covers the email form after a win) */
-    tokenTtlSec: 15 * 60,
-    /** the client records progress this often; the server replays it */
-    sampleIntervalMs: 250,
-    /** extra seconds allowed past timeLimit for frame jitter and the win animation */
-    durationSlackSec: 3,
-    /** the fastest legal progress rate is maxBoost / fillSeconds; samples may exceed it by this factor */
-    rateTolerance: 1.2,
-    /** codes look like BOO-XXXXX and stay valid this many days */
-    codePrefix: "BOO",
-    codeValidDays: 7,
-  },
 
   /** where the ghost lets go, in progress (0–1). Shared by the 3D reveal and the status copy. */
   stages: {
@@ -107,7 +79,7 @@ export const gameConfig = {
 
   cup: {
     /** the real cup model; the primitive placeholder is used when useModel is false (see README) */
-    modelUrl: "/images/halloween/MilkaBoo_Cup.glb",
+    modelUrl: "/games/wicked-rose/MilkaBoo_Cup.glb",
     useModel: true,
     /** the GLB is scaled so its height matches this (scene units), and sits on y = bottom (the ground, GROUND_Y) */
     height: 2.6,
@@ -124,7 +96,7 @@ export const gameConfig = {
 
   /** the ghost's portrait, draped over the front of the cup with her head above the lid (cup space, scene units) */
   ghostSprite: {
-    url: "/images/halloween/Mischievous%20Pink%20Rose%20Ghost.png",
+    url: "/games/wicked-rose/Mischievous%20Pink%20Rose%20Ghost.png",
     /** width × height of the picture in the scene (keep the image's aspect ratio) */
     size: [3.0, 2.0] as [number, number],
     /** where her face is in the image (0–1 from the left, 0–1 from the bottom); it's centred over the cup */
@@ -136,7 +108,7 @@ export const gameConfig = {
 
   /** the painted cemetery behind the game; it always fills the screen, cropped like CSS object-fit: cover */
   backdrop: {
-    url: "/images/halloween/Moonlit%20Gothic%20Cemetery%20Gate.png",
+    url: "/games/wicked-rose/Moonlit%20Gothic%20Cemetery%20Gate.png",
     /** the part of the painting (0–1 from the left) kept in view on narrow screens */
     focusX: 0.6,
     /** the height of the painted ground the cup stands on (0–1 from the bottom of the painting) */

@@ -1,9 +1,6 @@
 import { gameConfig } from "@/lib/gameConfig";
 
-const { round, fightBack, server } = gameConfig;
-
-/** [ms since round start, progress 0–1] */
-export type ProgressSample = [number, number];
+const { round, fightBack } = gameConfig;
 
 export type RoundStatus = "running" | "won" | "lost";
 
@@ -23,8 +20,6 @@ export interface RoundState {
   gripping: boolean;
   gripUntil: number;
   nextGripAt: number;
-  samples: ProgressSample[];
-  nextSampleAt: number;
 }
 
 export interface BreathInput {
@@ -49,8 +44,6 @@ export function createRound(rng: () => number = Math.random): RoundState {
     gripping: false,
     gripUntil: 0,
     nextGripAt: randomBetween(fightBack.minInterval, fightBack.maxInterval, rng),
-    samples: [[0, 0]],
-    nextSampleAt: server.sampleIntervalMs / 1000,
   };
 }
 
@@ -90,12 +83,6 @@ export function stepRound(
   }
   state.progress = Math.min(1, Math.max(0, state.progress));
   state.peak = Math.max(state.peak, state.progress);
-
-  // light record for the server to replay
-  if (state.elapsed >= state.nextSampleAt || state.progress >= 1) {
-    state.samples.push([Math.round(state.elapsed * 1000), Math.round(state.progress * 1000) / 1000]);
-    state.nextSampleAt += server.sampleIntervalMs / 1000;
-  }
 
   if (state.progress >= 1) {
     state.status = "won";

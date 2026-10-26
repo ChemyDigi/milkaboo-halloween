@@ -3,10 +3,8 @@ export const BRAND = "Milkaboo";
 
 export const copy = {
   title: `Free the ${BRAND} Cup`,
-  tagline: "A ghost has wrapped itself around your bubble tea. Suck it off before time runs out and the cup is yours.",
-  start: "Start",
-  triesLeft: (n: number) => (n === 1 ? "1 try left today" : `${n} tries left today`),
-  noTriesLeft: "No tries left today. The ghost needs its beauty sleep. Come back tomorrow!",
+  tagline: "A ghost has wrapped itself around your bubble tea. Suck it off before time runs out and free the cup!",
+  start: "Start Game",
   hygiene: "Keep the phone a finger's width from your mouth. No licking the ghost.",
 
   permission: {
@@ -61,34 +59,14 @@ export const copy = {
 
   win: {
     title: "You freed the cup!",
-    body: "The ghost is gone and the bubble tea is yours.",
-    emailLabel: "Your email",
-    emailHint: "Where should we send your free cup code?",
-    emailPlaceholder: "you@example.com",
-    claim: "Get my free cup",
-    claiming: "Checking with the ghost…",
-    codeLabel: "Your free cup code",
-    copy: "Copy",
-    copied: "Copied!",
-    redeem: `Show this code at any ${BRAND} counter.`,
-    expires: (date: string) => `Valid until ${date}. One free cup per code.`,
-    errors: {
-      "bad-email": "That email looks a bit spooky. Check it and try again.",
-      "email-already-won": "This email has already won a cup. Share the fun with a friend!",
-      "device-already-won": "This phone already won today. Come back tomorrow!",
-      "budget-spent": "You beat the ghost, but today's free cups are all gone. Try again tomorrow!",
-      "already-claimed": "This win has already been claimed.",
-      "invalid-session": "Your round expired before you claimed it. Play again!",
-      "round-rejected": "The ghost disputes that win. Play another round!",
-      network: "We couldn't reach the counter. Check your connection and try again.",
-    } as Record<string, string>,
-    playAgain: "Back to start",
+    body: "The ghost was vanquished and the Milkaboo cup is saved!",
+    playAgain: "Play Again",
   },
 
   lose: {
     title: "The ghost won this time",
     freed: (pct: number) => `You freed ${pct}% of the cup`,
-    tryAgain: "Try again",
+    tryAgain: "Try Again",
     taunt: ["Boo-hoo-hoo!", "Is that all you've got?", "This tea is mine!"],
   },
 

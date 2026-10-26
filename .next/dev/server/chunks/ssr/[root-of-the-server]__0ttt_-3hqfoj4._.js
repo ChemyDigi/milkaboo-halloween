@@ -17,7 +17,7 @@ var __TURBOPACK__imported__module__$5b$project$5d2f$components$2f$halloween$2f$H
 ;
 const metadata = {
     title: "Halloween - Free the Milkaboo Cup | Milkaboo",
-    description: "The ghosts have taken over! Our delicious Milkaboo flavours have been conquered by mischievous ghosts! Play a game, win the challenge, and claim a FREE drink!"
+    description: "The ghosts have taken over! Our delicious Milkaboo flavours have been conquered by mischievous ghosts! Play the challenges, defeat the ghosts, and free the cups!"
 };
 const viewport = {
     themeColor: "#0b0514",

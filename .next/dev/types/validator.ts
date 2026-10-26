@@ -41,16 +41,6 @@ type LayoutConfig<Route extends LayoutRoutes = LayoutRoutes> = {
   viewport?: any
 } & ParamMatchingExports<Route>
 
-type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRoutes> = {
-  GET?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  POST?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  PUT?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  PATCH?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  DELETE?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  HEAD?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-  OPTIONS?: (request: NextRequest, context: { params: Promise<ParamMap[Route]> }) => Promise<Response | void> | Response | void
-}
-
 
 // Validate ../../../app/(game)/page.tsx
 {
@@ -69,45 +59,7 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
-// Validate ../../../app/api/admin/redeem/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/admin/redeem">> = Specific
-  const handler = {} as typeof import("../../../app/api/admin/redeem/route.js")
-  type __Check = __IsExpected<typeof handler>
-  
-  // @ts-ignore
-  type __Unused = __Check
-}
 
-// Validate ../../../app/api/game/claim/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/game/claim">> = Specific
-  const handler = {} as typeof import("../../../app/api/game/claim/route.js")
-  type __Check = __IsExpected<typeof handler>
-  
-  // @ts-ignore
-  type __Unused = __Check
-}
-
-// Validate ../../../app/api/game/start/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/game/start">> = Specific
-  const handler = {} as typeof import("../../../app/api/game/start/route.js")
-  type __Check = __IsExpected<typeof handler>
-  
-  // @ts-ignore
-  type __Unused = __Check
-}
-
-// Validate ../../../app/api/game/status/route.ts
-{
-  type __IsExpected<Specific extends RouteHandlerConfig<"/api/game/status">> = Specific
-  const handler = {} as typeof import("../../../app/api/game/status/route.js")
-  type __Check = __IsExpected<typeof handler>
-  
-  // @ts-ignore
-  type __Unused = __Check
-}
 
 
 

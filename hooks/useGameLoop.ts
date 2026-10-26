@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState, type RefObject } from "react"
 import { gameConfig } from "@/lib/gameConfig";
 import { createRound, stepRound, type RoundEvent, type RoundState } from "@/lib/gameEngine";
 import type { BreathReading } from "@/hooks/useBreathDetector";
-import type { SceneState } from "@/components/three/sceneState";
+import type { SceneState } from "@/components/games/wicked-rose/three/sceneState";
 
 export interface HudSnapshot {
   progress: number;
