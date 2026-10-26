@@ -79,7 +79,7 @@ export default function PermissionScreen({ status, onAllow }: Props) {
             <p className="mt-2 text-(--g-muted)">{t.body}</p>
             <button
               type="button"
-              className="game__button mt-5 w-full"
+              className="game__button mt-5 w-full bg-[#ff7cbe] text-[#1a0b26] font-black shadow-[0_0_32px_rgba(255,124,190,0.55)] hover:bg-[#ff5faf] cursor-pointer"
               onClick={onAllow}
               disabled={status === "requesting"}
             >

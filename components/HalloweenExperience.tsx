@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Gamepad2, Sparkles, X, ChevronRight, Award } from "lucide-react";
+import { Gamepad2, X, Award } from "lucide-react";
 import WickedRoseGame from "@/components/games/wicked-rose/WickedRoseGame";
 import CasperCustardGame from "@/components/games/casper-custard/CasperCustardGame";
 import HauntedAppleGame from "@/components/games/haunted-apple/HauntedAppleGame";
 import BlackcurrantBeastGame from "@/components/games/blackcurrant-beast/BlackcurrantBeastGame";
+import SpookyAmbience from "@/components/SpookyAmbience";
 
 /** which game a flavour's ghost challenges you to */
 type GameKind = "rose" | "custard" | "apple" | "beast";
@@ -102,6 +103,24 @@ const FLAVORS: FlavorCard[] = [
     game: "rose",
   },
 ];
+
+/* ---------- the flavour popup: a WANTED poster for the ghost ---------- */
+
+/** old dark paper, with the ghost's glow bleeding through behind the mugshot */
+const paper = (glow: string) =>
+  `radial-gradient(ellipse 70% 32% at 50% 30%, ${glow}, transparent 70%), radial-gradient(ellipse at 90% 95%, rgba(255, 255, 255, 0.05), transparent 45%), linear-gradient(160deg, #261742 0%, #180c2b 55%, #110720 100%)`;
+/** paper grain (pale speckle), drawn by an SVG noise filter so it costs no download */
+const PAPER_GRAIN = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.5 0 0 0 0'/></filter><rect width='220' height='220' filter='url(%23g)'/></svg>")`;
+/** the poster's bottom edge, torn: a clip-path polygon with a deterministic jagged edge */
+const TORN_EDGE = (() => {
+  const points = ["0% 0%", "100% 0%"];
+  const teeth = 26;
+  for (let i = teeth; i >= 0; i--) {
+    const depth = 96.4 + ((i * 7) % 5) * 0.6 + (i % 2) * 0.8;
+    points.push(`${((i / teeth) * 100).toFixed(1)}% ${depth.toFixed(1)}%`);
+  }
+  return `polygon(${points.join(", ")})`;
+})();
 
 // Stylized ghost character badge floating over each flavor cup
 function FlavorGhostBadge({ type, color }: { type: FlavorCard["ghostType"]; color: string }) {
@@ -434,45 +453,15 @@ export default function HalloweenExperience() {
         }
       `}</style>
 
+      {/* Background soundtrack, quiet while a game (with its own sounds and mic) is open */}
+      <SpookyAmbience paused={activeGame !== null} />
+
       {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
         <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
         <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
       </div>
-
-      {/* Floating Animated Ghost Emojis */}
-      <motion.div
-        className="pointer-events-none fixed top-28 left-[6%] z-20 hidden lg:block opacity-65"
-        animate={{
-          y: [0, -18, 0],
-          x: [0, 8, 0],
-          rotate: [-4, 4, -4],
-        }}
-        transition={{
-          duration: 5.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        <span className="text-4xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">👻</span>
-      </motion.div>
-
-      <motion.div
-        className="pointer-events-none fixed top-36 right-[8%] z-20 hidden lg:block opacity-65"
-        animate={{
-          y: [0, 18, 0],
-          x: [0, -8, 0],
-          rotate: [4, -4, 4],
-        }}
-        transition={{
-          duration: 6.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        <span className="text-4xl filter drop-shadow-[0_0_15px_rgba(255,124,190,0.8)]">🦇</span>
-      </motion.div>
 
       {/* ========================================================================= */}
       {/* HERO SECTION: Full-width haunted mansion background with floating cup   */}
@@ -506,8 +495,27 @@ export default function HalloweenExperience() {
           <div className="absolute bottom-0 inset-x-0 h-64 bg-linear-to-t from-[#0d0618]/80 via-[#0d0618]/40 to-transparent" />
         </div>
 
+        {/* Top of Home Page: Centered Haunted Neon Logo */}
+        <motion.div
+          className="absolute top-4 sm:top-6 inset-x-0 z-20 flex justify-center pointer-events-auto"
+          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="relative h-18 sm:h-22 md:h-26 aspect-72/102 transition-transform duration-300 hover:scale-105 filter drop-shadow-[0_0_20px_rgba(255,140,40,0.7)] hover:drop-shadow-[0_0_35px_rgba(255,140,40,0.95)] cursor-pointer">
+            <Image
+              src="/images/haunted_neon_logo.png"
+              alt="Milkaboo Haunted Logo"
+              fill
+              priority
+              sizes="(max-width: 640px) 70px, 90px"
+              className="object-contain select-none"
+            />
+          </div>
+        </motion.div>
+
         {/* Hero Interactive Content Container */}
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-24">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-10 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-4 items-center">
 
             {/* Left Column: Headlines, Description & Play & Win CTA */}
@@ -561,28 +569,6 @@ export default function HalloweenExperience() {
                   free the cups!
                 </span>
               </motion.p>
-
-              {/* PLAY GAME Button with Warm Glowing Gradient */}
-              <motion.div
-                className="mt-8 flex flex-col sm:flex-row items-center gap-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveGame("rose")}
-                  className="group relative inline-flex items-center justify-center gap-3.5 overflow-hidden rounded-full px-9 py-4 font-black tracking-wider uppercase text-[#241a33] transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(254,183,124,0.65)] hover:shadow-[0_0_60px_rgba(255,124,190,0.9)] cursor-pointer"
-                  style={{
-                    background: "linear-gradient(135deg, #fed778 0%, #feb273 50%, #ff8ab2 100%)",
-                  }}
-                >
-                  {/* Subtle sheen highlight */}
-                  <span className="absolute inset-0 bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Gamepad2 className="h-6 w-6 text-[#241a33] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-                  <span className="text-lg sm:text-xl font-black">PLAY GAME</span>
-                </button>
-              </motion.div>
             </motion.div>
 
             {/* Right Column: Milkaboo Cup with Ghosts placed over the misty mansion */}
@@ -714,8 +700,8 @@ export default function HalloweenExperience() {
                 whileHover={{
                   y: -10,
                   scale: 1.025,
-                  borderColor: flavor.borderGlow,
-                  boxShadow: `0 20px 45px rgba(0, 0, 0, 0.85), 0 0 35px ${flavor.glowColor}`,
+                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.85)",
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -723,12 +709,6 @@ export default function HalloweenExperience() {
                 transition={{ duration: 0.5, delay: index * 0.12 }}
                 onClick={() => setSelectedFlavor(flavor)}
               >
-                {/* Glowing Card Aura on Hover */}
-                <div
-                  className="pointer-events-none absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
-                  style={{ background: flavor.glowColor }}
-                />
-
                 <div className="relative">
                   {/* Card Visual Stage */}
                   <div className="relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-black/40 flex flex-col justify-between p-4">
@@ -752,7 +732,7 @@ export default function HalloweenExperience() {
 
                     {/* Flavor Spotlight Radial Glow */}
                     <div
-                      className="absolute inset-0 opacity-40 group-hover:opacity-75 transition-opacity duration-500"
+                      className="absolute inset-0 opacity-40 transition-opacity duration-500"
                       style={{
                         background: `radial-gradient(circle at 50% 60%, ${flavor.glowColor} 0%, transparent 70%)`,
                       }}
@@ -777,15 +757,6 @@ export default function HalloweenExperience() {
                         </div>
                       </>
                     )}
-
-                    {/* Hover Quick Action Pill */}
-                    <div className={`relative z-10 ${flavor.posterImage ? "mt-auto" : ""} translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between rounded-xl bg-black/80 px-3.5 py-2 backdrop-blur-md border border-white/10 shadow-lg`}>
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                        Free this flavour
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-white/80" />
-                    </div>
                   </div>
 
                   {/* Ghost cut-out: same box as the poster above, but not clipped by the stage */}
@@ -827,119 +798,168 @@ export default function HalloweenExperience() {
       </div>
 
       {/* ========================================================================= */}
-      {/* FLAVOUR DETAILS MODAL: Interactive Lore & Play Challenge Trigger          */}
+      {/* FLAVOUR DETAILS MODAL: a WANTED poster for the ghost that took the cup   */}
       {/* ========================================================================= */}
       <AnimatePresence>
         {selectedFlavor && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedFlavor(null)}
           >
-            <motion.div
-              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/20 bg-[#160b29] p-6 shadow-2xl sm:p-8"
-              style={{
-                boxShadow: `0 25px 60px rgba(0, 0, 0, 0.9), 0 0 50px ${selectedFlavor.glowColor}`,
-              }}
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
+            {/* Close: pinned to the screen, off the paper */}
+            <button
+              type="button"
+              onClick={() => setSelectedFlavor(null)}
+              className="group fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:border-white/40 hover:text-white cursor-pointer"
+              aria-label="Close details"
             >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedFlavor(null)}
-                className="absolute top-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                aria-label="Close details"
+              <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
+            </button>
+
+            <div className="flex min-h-full items-center justify-center px-4 pt-14 pb-6 sm:pt-20">
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Wanted: ${selectedFlavor.ghostTitle}`}
+                className="relative w-full max-w-[380px]"
+                style={{
+                  transformOrigin: "50% -60px",
+                  filter: `drop-shadow(0 30px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 28px ${selectedFlavor.glowColor})`,
+                }}
+                initial={{ y: -70, rotate: -8, opacity: 0 }}
+                animate={{ y: 0, rotate: -1.5, opacity: 1 }}
+                exit={{ y: 50, rotate: 5, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 150, damping: 15 }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="h-5 w-5" />
-              </button>
+                {/* strips of tape holding it up */}
+                <div aria-hidden className="absolute -top-3 left-5 z-20 h-7 w-24 -rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
+                <div aria-hidden className="absolute -top-3 right-5 z-20 h-7 w-24 rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
 
-              <div className="flex flex-col items-center text-center">
-                {/* Flavor Cup Image Preview */}
-                <div
-                  className="relative h-64 w-52 overflow-hidden rounded-2xl p-4 flex items-center justify-center"
-                  style={{
-                    background: `radial-gradient(circle, ${selectedFlavor.glowColor} 0%, rgba(22, 11, 41, 0.9) 70%)`,
-                  }}
-                >
-                  {selectedFlavor.posterImage ? (
-                    <Image
-                      src={selectedFlavor.posterImage}
-                      alt={selectedFlavor.fullName}
-                      fill
-                      sizes="208px"
-                      className="object-cover object-[center_30%]"
-                    />
-                  ) : (
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={selectedFlavor.cupImage}
-                        alt={selectedFlavor.fullName}
-                        fill
-                        sizes="208px"
-                        className="object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
-                      />
+                {/* the paper */}
+                <div className="relative overflow-hidden px-7 pt-6 pb-9 text-[#f6f0ff]" style={{ clipPath: TORN_EDGE, background: paper(selectedFlavor.glowColor) }}>
+                  <div aria-hidden className="pointer-events-none absolute inset-0 opacity-20 mix-blend-screen" style={{ backgroundImage: PAPER_GRAIN }} />
+                  {/* a ring left by a cup */}
+                  <div aria-hidden className="pointer-events-none absolute -left-12 top-[62%] h-36 w-36 rounded-full border-[7px] border-white/8 blur-[1px]" />
+
+                  {/* heading */}
+                  <div className="relative text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#bfb0d9]/70">
+                      Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="font-bherisi mt-1 text-[58px] leading-none tracking-[0.1em] sm:text-[64px]">WANTED</h3>
+                    <p className="mt-2 border-y-2 border-white/25 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">
+                      For the haunting of a Milkaboo cup
+                    </p>
+                  </div>
+
+                  {/* the mugshot: a photo glued on, the ghost drifting up out of it. A 4:5 photo with a
+                      box 125% as tall is the poster's own 2:3, so none of the ghost is cropped away. */}
+                  <div className="relative mx-auto mt-14 w-[62%] rotate-[1.5deg]">
+                    <div className="relative aspect-4/5 overflow-hidden border-[6px] border-[#efe8f7] bg-[#1a0f24] shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
+                      {selectedFlavor.posterImage ? (
+                        <div className={`absolute inset-x-0 bottom-0 ${selectedFlavor.ghostImage ? "h-[125%]" : "top-0"}`}>
+                          <Image
+                            src={selectedFlavor.posterImage}
+                            alt={selectedFlavor.fullName}
+                            fill
+                            sizes="320px"
+                            className="object-cover object-center select-none"
+                          />
+                        </div>
+                      ) : (
+                        <Image
+                          src={selectedFlavor.cupImage}
+                          alt={selectedFlavor.fullName}
+                          fill
+                          sizes="320px"
+                          className="object-contain p-4 select-none"
+                        />
+                      )}
                     </div>
-                  )}
-                </div>
+                    {/* same box as the photo (inside its white border), but not clipped by it */}
+                    {selectedFlavor.posterImage && selectedFlavor.ghostImage && (
+                      <div className="pointer-events-none absolute inset-[6px]">
+                        <motion.div
+                          className="absolute inset-x-0 bottom-0 h-[125%]"
+                          animate={{ y: [0, -5, 0] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Image
+                            src={selectedFlavor.ghostImage}
+                            alt=""
+                            fill
+                            sizes="320px"
+                            className="object-cover object-center select-none"
+                            style={{ filter: `drop-shadow(0 -4px 12px ${selectedFlavor.glowColor})` }}
+                          />
+                        </motion.div>
+                      </div>
+                    )}
+                    {/* stamped over the corner */}
+                    <div
+                      aria-hidden
+                      className="absolute -right-7 bottom-4 rotate-[-12deg] border-[3px] border-double bg-[#170b27]/80 px-2 py-0.5 text-sm font-black uppercase tracking-[0.25em] opacity-90"
+                      style={{ borderColor: selectedFlavor.themeColor, color: selectedFlavor.themeColor }}
+                    >
+                      At large
+                    </div>
+                  </div>
 
-                <div className="mt-5">
-                  <span
-                    className="inline-block rounded-full px-3.5 py-1 text-xs font-bold tracking-wide uppercase text-white/90"
-                    style={{ background: selectedFlavor.badgeBg }}
-                  >
-                    {selectedFlavor.ghostTitle}
-                  </span>
+                  {/* who, and what they took */}
+                  <div className="relative mt-5">
+                    <p className="font-mainstay text-[32px] leading-none" style={{ color: selectedFlavor.themeColor }}>
+                      {selectedFlavor.ghostTitle}
+                    </p>
+                    <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bfb0d9]/70">Last seen possessing the</p>
+                    <p className="font-bherisi mt-0.5 text-[26px] uppercase leading-none tracking-wider">{selectedFlavor.fullName}</p>
+                    <p className="mt-2.5 text-[13px] leading-relaxed text-[#c7bcd8]">{selectedFlavor.desc}</p>
+                  </div>
 
-                  <h3
-                    className="font-creepster mt-3 text-3xl sm:text-4xl font-black uppercase tracking-wider"
-                    style={{
-                      color: selectedFlavor.themeColor,
-                    }}
-                  >
-                    {selectedFlavor.fullName}
-                  </h3>
-
-                  <p className="mt-3 text-sm text-[#c7bcd8] leading-relaxed max-w-sm">
-                    {selectedFlavor.desc}
-                  </p>
-                </div>
-
-                {/* Challenge Action Button */}
-                <div className="mt-6 flex w-full flex-col gap-3">
+                  {/* bring them in */}
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedFlavor(null);
                       setActiveGame(selectedFlavor.game);
                     }}
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-black text-[#241a33] transition-all hover:scale-103 cursor-pointer shadow-lg"
+                    className="group relative mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
                     style={{
-                      background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)",
+                      // globals.css resets button font/colour/padding outside Tailwind's layers, so set them here
+                      padding: "0.9rem 1.1rem 0.9rem 1.25rem",
+                      color: "#0e0717",
+                      backgroundColor: selectedFlavor.themeColor,
+                      boxShadow: `inset 0 0 0 2px ${selectedFlavor.themeColor}, inset 0 0 0 4px #0e0717, 0 0 28px ${selectedFlavor.glowColor}`,
                     }}
                   >
-                    <Gamepad2 className="h-5 w-5" />
-                    <span>
-                      {selectedFlavor.game === "custard" && "Play Casper's Jigsaw"}
-                      {selectedFlavor.game === "apple" && "Play Boba Drop"}
-                      {selectedFlavor.game === "beast" && "Play Beast's Cup Shuffle"}
-                      {selectedFlavor.game === "rose" && "Free the Rose Cup"}
+                    <span className="flex flex-col items-start text-left">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.35em] opacity-70">Bring them in · play</span>
+                      <span className="font-bherisi text-xl uppercase leading-tight tracking-wider">
+                        {selectedFlavor.game === "custard" && "Casper's Jigsaw"}
+                        {selectedFlavor.game === "apple" && "Apple Boba Catch"}
+                        {selectedFlavor.game === "beast" && "Shadow Beast Swat"}
+                        {selectedFlavor.game === "rose" && "Free the Rose Cup"}
+                      </span>
                     </span>
+                    <Gamepad2 className="h-7 w-7 shrink-0 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setSelectedFlavor(null)}
-                    className="w-full text-center text-xs text-[#a495bf] hover:text-white py-1 transition-colors cursor-pointer"
+                    className="relative mt-4 w-full text-[#bfb0d9]/70 transition-colors hover:text-white cursor-pointer"
+                    style={{ padding: "0.25rem 0" }}
                   >
-                    Close & pick another
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] underline decoration-dotted underline-offset-4">
+                      Not your ghost? Pick another flavour
+                    </span>
                   </button>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
@@ -955,15 +975,15 @@ export default function HalloweenExperience() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Exit Game Floating Bar */}
-            <div className="absolute top-4 left-4 z-50">
+            {/* Exit Game Floating Button */}
+            <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-50">
               <button
                 type="button"
                 onClick={() => setActiveGame(null)}
-                className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-sm font-bold text-white/90 backdrop-blur-md hover:bg-black/80 hover:text-white transition-all shadow-lg cursor-pointer"
+                aria-label="Exit game"
+                className="group flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/40 hover:bg-black/80 hover:text-white active:scale-95 cursor-pointer"
               >
-                <X className="h-4 w-4" />
-                <span>Exit Challenge</span>
+                <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
               </button>
             </div>
 

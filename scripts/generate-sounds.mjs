@@ -145,3 +145,49 @@ const env = (t, attack, release, length) => Math.min(1, t / attack) * Math.min(1
     }),
   );
 }
+
+// site-ambience: the website's background music, a 16 s seamless loop of a creepy A-minor music-box lullaby
+// over a low drone and wind, with a distant ghost moan. Every drone frequency is a whole number of cycles in
+// 16 s, and the music-box echo wraps around the loop point, so it repeats without a click.
+{
+  const len = 16;
+  const n = len * RATE;
+  const out = new Float32Array(n);
+  const hz = (midi) => 440 * Math.pow(2, (midi - 69) / 12);
+  // [start in half-second steps, midi note]
+  const melody = [
+    [0, 69], [1, 72], [2, 76], [3, 80], [4, 81], [6, 76], [7, 72],
+    [8, 71], [9, 74], [10, 77], [11, 76], [12, 75], [14, 71],
+    [16, 69], [17, 72], [18, 76], [19, 81], [20, 80], [21, 77], [22, 76],
+    [24, 74], [25, 71], [26, 68], [27, 71], [28, 69],
+  ];
+  for (const [step, midi] of melody) {
+    const f = hz(midi);
+    const at = Math.round(step * 0.5 * RATE);
+    for (let i = 0; i < 2.4 * RATE; i++) {
+      const t = i / RATE;
+      // music box: bright attack, slightly inharmonic overtone, long ring
+      const s = (Math.sin(TAU * f * t) + 0.25 * Math.sin(TAU * f * 2.76 * t) * Math.exp(-t * 6)) * Math.exp(-t * 2.2);
+      out[(at + i) % n] += s * Math.min(1, t / 0.004) * 0.22;
+    }
+  }
+  // echo, run twice around the loop so the tail of the last notes rings into the start
+  const delay = Math.round(0.375 * RATE);
+  for (let pass = 0; pass < 2; pass++) for (let i = 0; i < n; i++) out[i] += out[(i - delay + n) % n] * 0.35 * (pass ? 0.3 : 1);
+
+  let lp = 0;
+  const wind = render(len + 1, () => (lp += (rand() - lp) * 0.015));
+  const fade = RATE;
+  for (let i = 0; i < n; i++) {
+    const t = i / RATE;
+    const drone = Math.sin(TAU * 55 * t) * 0.35 + Math.sin(TAU * 82.375 * t) * 0.18 * (0.6 + 0.4 * Math.sin((TAU * t) / 8));
+    // wind crossfaded with its own extra second so the loop seam is invisible
+    const w = i < fade ? wind[i] * (i / fade) + wind[n + i] * (1 - i / fade) : wind[i];
+    const gust = 0.5 + 0.5 * Math.sin((TAU * t) / 16);
+    // ghost moan around 9–12 s
+    const mt = t - 9;
+    const moan = mt > 0 && mt < 3 ? Math.sin(TAU * (330 + 90 * Math.sin((Math.PI * mt) / 3)) * mt + 3 * Math.sin(TAU * 5 * mt) / 5) * Math.sin((Math.PI * mt) / 3) * 0.08 : 0;
+    out[i] += drone * 0.4 + w * 1.4 * gust + moan;
+  }
+  writeWav("site-ambience", out);
+}
