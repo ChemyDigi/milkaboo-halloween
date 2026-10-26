@@ -1,6 +1,0 @@
-{
-  "version": 3,
-  "sources": [],
-  "sections": [
-    {"offset": {"line": 1, "column": 0}, "map": {"version":3,"sources":["turbopack:///[project]/app/jamoascript_cebb5ffc.module.css"],"sourcesContent":["@font-face {\n    \nfont-family: 'jamoaScript';\n    src: url('@vercel/turbopack-next/internal/font/local/font?{%22path%22:%22../public/fonts/JamoaScript.ttf%22,%22preload%22:true,%22has_size_adjust%22:true}') format('truetype');\n    font-display: swap;\n    \n}\n\n@font-face {\n    font-family: 'jamoaScript Fallback';\n    src: local(\"Arial\");\n    ascent-override: 119.19%;\ndescent-override: 38.71%;\nline-gap-override: 10.36%;\nsize-adjust: 68.37%;\n\n}\n\n.className {\n    font-family: 'jamoaScript', 'jamoaScript Fallback';\n    \n}\n.variable {\n    --font-jamoa: 'jamoaScript', 'jamoaScript Fallback';\n}\n\n"],"names":[],"mappings":"AAAA;;;;;;AAQA;;;;;;;;;AAUA;;;;AAIA"}}]
-}
