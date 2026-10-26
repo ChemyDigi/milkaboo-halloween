@@ -1,8 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useId, useMemo, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
+import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "framer-motion";
-import { Eye, EyeOff, RotateCcw, Timer, Trophy } from "lucide-react";
+import Image from "next/image";
+import { Eye, EyeOff, RotateCcw, Timer } from "lucide-react";
+import { useDeviceTier, useReducedMotion } from "@/hooks/useDeviceTier";
+import Casper, { ARRIVAL_SECONDS, CASPER_SRC } from "./Casper";
+
+/** the animated night behind the puzzle; 3D, so it loads on its own after the puzzle is up */
+const CustardNight = dynamic(() => import("./CustardNight"), { ssr: false });
 
 /** The Casper Custard poster, cut into COLS × ROWS classic jigsaw pieces. */
 const IMAGE = { src: "/games/casper-custard/Milka%20Boo%20Vanilla%20Ghost%20Bubble%20Tea.png", width: 1024, height: 1536 };
@@ -34,6 +41,9 @@ interface Piece {
 }
 
 interface Layout {
+  /** the play area, in px */
+  width: number;
+  height: number;
   /** screen px per image unit */
   scale: number;
   boardLeft: number;
@@ -112,6 +122,8 @@ function computeLayout(width: number, height: number): Layout {
     const boardLeft = (width - boardW) / 2;
     const trayTop = top + boardH + 16;
     return {
+      width,
+      height,
       scale,
       boardLeft,
       boardTop: top,
@@ -124,6 +136,8 @@ function computeLayout(width: number, height: number): Layout {
   const side = boardLeft - 24 - PIECE_W * scale;
   const trayH = Math.max(playH - PIECE_H * scale, 1);
   return {
+    width,
+    height,
     scale,
     boardLeft,
     boardTop: top,
@@ -156,6 +170,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
   /** draw order of the loose pieces: the last one is on top */
   const [order, setOrder] = useState<number[]>(() => pieces.map((p) => p.id));
   const [scattered, setScattered] = useState(false);
+  /** goes up on every shuffle: Casper flies in again and the pieces are tossed out again */
+  const [round, setRound] = useState(0);
   const [peek, setPeek] = useState(false);
   const [moves, setMoves] = useState(0);
   const [startedAt, setStartedAt] = useState<number | null>(null);
@@ -165,6 +181,9 @@ export default function JigsawPuzzle({ onExit }: Props) {
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
   const won = finishedIn !== null;
+  const placedCount = pieces.filter((p) => p.placed).length;
+  const tier = useDeviceTier();
+  const reducedMotion = useReducedMotion();
 
   /** throws every loose piece somewhere in the trays */
   const scatter = useCallback((list: Piece[], l: Layout) => {
@@ -210,6 +229,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
     setPeek(false);
     setDraggingId(null);
     drag.current = null;
+    setRound((r) => r + 1);
   };
 
   const onPointerDown = (e: ReactPointerEvent<SVGGElement>, piece: Piece) => {
@@ -249,30 +269,41 @@ export default function JigsawPuzzle({ onExit }: Props) {
     if (next.every((p) => p.placed)) setFinishedIn(e.timeStamp - (startedAt ?? e.timeStamp));
   };
 
-  const placedCount = pieces.filter((p) => p.placed).length;
   const elapsed = finishedIn ?? (startedAt === null ? 0 : Math.max(0, now - startedAt));
-  // placed pieces underneath, then the loose ones in their stacking order
-  const drawn = useMemo(() => {
-    const byId = new Map(pieces.map((p) => [p.id, p]));
-    return [...pieces.filter((p) => p.placed), ...order.map((id) => byId.get(id)!).filter((p) => !p.placed)];
-  }, [pieces, order]);
+  // stacking: placed pieces underneath, then the loose ones in their draw order. It's done with z-index
+  // rather than DOM order, so picking a piece up never moves its node (which would restart its toss-in
+  // animation and drop the pointer capture mid-drag)
+  const stack = useMemo(() => new Map(order.map((id, i) => [id, i + 1])), [order]);
 
   const k = layout?.scale ?? 0;
   const pieceBox = { w: (PIECE_W + MARGIN * 2) * k, h: (PIECE_H + MARGIN * 2) * k };
 
   return (
     <div ref={container} className="relative h-full w-full touch-none select-none overflow-hidden bg-[#120a1f]">
-      {/* a dim, blurred copy of the poster behind everything */}
-      <div
-        className="pointer-events-none absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl"
-        style={{ backgroundImage: `url("${IMAGE.src}")` }}
-      />
+      <style>{`
+        @keyframes casper-toss {
+          from { opacity: 0; transform: translateY(-28px) scale(0.3) rotate(-25deg); }
+          to { opacity: 1; transform: none; }
+        }
+      `}</style>
+      {/* the night behind everything: a dim, blurred copy of the poster shows until the animated night has loaded over it */}
+      <div className="pointer-events-none absolute inset-0 select-none">
+        <div
+          className="absolute inset-0 scale-110 bg-cover bg-center opacity-20 blur-2xl"
+          style={{ backgroundImage: `url("${IMAGE.src}")` }}
+        />
+        <div className="absolute inset-0">
+          <CustardNight progress={placedCount / pieces.length} snaps={placedCount} won={won} tier={tier} reducedMotion={reducedMotion} />
+        </div>
+        {/* darker at the top and bottom, so the title and the buttons read */}
+        <div className="absolute inset-0 bg-linear-to-t from-[#120a1f]/70 via-transparent to-[#120a1f]/55" />
+      </div>
 
       {/* title and stats */}
       <div className="absolute inset-x-0 top-4 z-20 flex flex-col items-center gap-1 px-4 pl-40 sm:pl-4">
         <h2
           className="font-creepster text-2xl sm:text-3xl uppercase tracking-wider"
-          style={{ color: ACCENT }}
+          style={{ color: ACCENT, textShadow: "0 0 24px rgba(254, 215, 120, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
         >
           Piece Casper Back Together
         </h2>
@@ -292,7 +323,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
         <>
           {/* the board: the outline of every piece's slot, and the faint picture when peeking */}
           <div
-            className="absolute rounded-xl border border-white/15 bg-black/35 shadow-[0_0_40px_rgba(254,215,120,0.12)]"
+            data-board
+            className="absolute rounded-xl border border-[#fed778]/25 bg-black/40 shadow-[0_0_60px_rgba(254,215,120,0.18)] backdrop-blur-[2px]"
             style={{ left: layout.boardLeft, top: layout.boardTop, width: IMAGE.width * k, height: IMAGE.height * k }}
           >
             <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMAGE.width} ${IMAGE.height}`} aria-hidden>
@@ -303,19 +335,35 @@ export default function JigsawPuzzle({ onExit }: Props) {
             </svg>
           </div>
 
-          {/* the pieces */}
+          {/* Casper: in front of everything while he flies, behind the pieces once he settles; keyed by the
+              round so a shuffle brings him flying in again */}
+          <Casper
+            key={round}
+            width={layout.width}
+            height={layout.height}
+            board={{ left: layout.boardLeft, top: layout.boardTop, width: IMAGE.width * k, height: IMAGE.height * k }}
+            snaps={placedCount}
+            won={won}
+            reducedMotion={reducedMotion}
+          />
+
+          {/* the pieces: each pops out as Casper flies past it (the key replays that on every shuffle) */}
           {scattered &&
-            drawn.map((p) => {
+            pieces.map((p) => {
               const dragging = draggingId === p.id;
+              const left = layout.boardLeft + (p.x - MARGIN) * k;
               return (
                 <svg
-                  key={p.id}
+                  key={`${round}-${p.id}`}
                   className="pointer-events-none absolute"
                   style={{
-                    left: layout.boardLeft + (p.x - MARGIN) * k,
+                    left,
                     top: layout.boardTop + (p.y - MARGIN) * k,
                     width: pieceBox.w,
                     height: pieceBox.h,
+                    zIndex: p.placed ? 0 : stack.get(p.id) ?? 1,
+                    animation: reducedMotion ? undefined : "casper-toss 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both",
+                    animationDelay: `${(0.5 + (Math.max(left, 0) / layout.width) * (ARRIVAL_SECONDS * 0.55)).toFixed(2)}s`,
                     filter: p.placed
                       ? "none"
                       : dragging
@@ -392,8 +440,15 @@ export default function JigsawPuzzle({ onExit }: Props) {
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.35 }}
             >
-              <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT }} />
-              <h3 className="font-creepster mt-3 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+              {/* Casper, free again */}
+              <motion.div
+                className="relative mx-auto -mt-20 h-32 w-32 filter drop-shadow-[0_0_24px_rgba(254,215,120,0.7)]"
+                animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-3, 3, -3] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain" />
+              </motion.div>
+              <h3 className="font-creepster mt-1 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
                 Casper Is Free!
               </h3>
               <p className="mt-2 text-sm text-[#d7cced]">
