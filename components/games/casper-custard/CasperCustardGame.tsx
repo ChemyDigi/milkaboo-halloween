@@ -57,7 +57,7 @@ interface Layout {
  * straight (0). The tab is drawn from a fixed template around the edge's midpoint, in TAB units.
  */
 function edgePath(x0: number, y0: number, x1: number, y1: number, sign: Edge) {
-  if (sign === 0) return `L ${x1} ${y1}`;
+  if (sign === 0) return `L ${ x1 } ${ y1 } `;
   const len = Math.hypot(x1 - x0, y1 - y0);
   const ux = (x1 - x0) / len;
   const uy = (y1 - y0) / len;
@@ -67,14 +67,14 @@ function edgePath(x0: number, y0: number, x1: number, y1: number, sign: Edge) {
   const mx = (x0 + x1) / 2;
   const my = (y0 + y1) / 2;
   const p = (along: number, out: number) =>
-    `${(mx + (ux * along + vx * out) * TAB).toFixed(1)} ${(my + (uy * along + vy * out) * TAB).toFixed(1)}`;
+    `${ (mx + (ux * along + vx * out) * TAB).toFixed(1) } ${ (my + (uy * along + vy * out) * TAB).toFixed(1) } `;
   return [
-    `L ${p(-0.12, 0)}`,
-    `C ${p(-0.08, 0)} ${p(-0.06, 0.06)} ${p(-0.1, 0.12)}`,
-    `C ${p(-0.16, 0.22)} ${p(-0.05, 0.28)} ${p(0, 0.28)}`,
-    `C ${p(0.05, 0.28)} ${p(0.16, 0.22)} ${p(0.1, 0.12)}`,
-    `C ${p(0.06, 0.06)} ${p(0.08, 0)} ${p(0.12, 0)}`,
-    `L ${x1} ${y1}`,
+    `L ${ p(-0.12, 0) } `,
+    `C ${ p(-0.08, 0) } ${ p(-0.06, 0.06) } ${ p(-0.1, 0.12) } `,
+    `C ${ p(-0.16, 0.22) } ${ p(-0.05, 0.28) } ${ p(0, 0.28) } `,
+    `C ${ p(0.05, 0.28) } ${ p(0.16, 0.22) } ${ p(0.1, 0.12) } `,
+    `C ${ p(0.06, 0.06) } ${ p(0.08, 0) } ${ p(0.12, 0) } `,
+    `L ${ x1 } ${ y1 } `,
   ].join(" ");
 }
 
@@ -96,7 +96,7 @@ function makePieces(): Piece[] {
       const bottom: Edge = row === ROWS - 1 ? 0 : horizontal[row][col];
       const left: Edge = col === 0 ? 0 : (-vertical[row][col - 1] as Edge);
       const path = [
-        `M ${x0} ${y0}`,
+        `M ${ x0 } ${ y0 } `,
         edgePath(x0, y0, x1, y0, top),
         edgePath(x1, y0, x1, y1, right),
         edgePath(x1, y1, x0, y1, bottom),
@@ -148,9 +148,18 @@ function computeLayout(width: number, height: number): Layout {
   };
 }
 
-const formatTime = (ms: number) => {
+const TIME_LIMIT_SECONDS = 35;
+const TIME_LIMIT_MS = TIME_LIMIT_SECONDS * 1000;
+const MAX_MOVES = 50;
+
+const formatCountdown = (ms: number) => {
+  const s = Math.max(0, Math.ceil(ms / 1000));
+  return `${ Math.floor(s / 60) }:${ String(s % 60).padStart(2, "0") } `;
+};
+
+const formatElapsed = (ms: number) => {
   const s = Math.floor(ms / 1000);
-  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
+  return `${ Math.floor(s / 60) }:${ String(s % 60).padStart(2, "0") } `;
 };
 
 interface Props {
@@ -160,7 +169,7 @@ interface Props {
 
 /**
  * "Piece Casper back together": a 12-piece jigsaw of the Casper Custard poster. Drag the loose pieces onto
- * the board; each one snaps in when it's dropped near its spot. Just for fun (no prize), timed and counted.
+ * the board; each one snaps in when it's dropped near its spot. Limited to 35 seconds and 50 moves.
  */
 export default function JigsawPuzzle({ onExit }: Props) {
   const uid = useId().replace(/:/g, "");
@@ -181,6 +190,15 @@ export default function JigsawPuzzle({ onExit }: Props) {
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
   const won = finishedIn !== null;
+  const elapsed = finishedIn ?? (startedAt === null ? 0 : Math.min(TIME_LIMIT_MS, Math.max(0, now - startedAt)));
+  const timeLeftMs = Math.max(0, TIME_LIMIT_MS - elapsed);
+  const movesLeft = Math.max(0, MAX_MOVES - moves);
+
+  const isTimeUp = startedAt !== null && !won && timeLeftMs <= 0;
+  const isMovesUp = !won && moves >= MAX_MOVES;
+  const lost = !won && (isTimeUp || isMovesUp);
+  const lostReason = isTimeUp ? "time" : isMovesUp ? "moves" : null;
+
   const placedCount = pieces.filter((p) => p.placed).length;
   const tier = useDeviceTier();
   const reducedMotion = useReducedMotion();
@@ -211,12 +229,20 @@ export default function JigsawPuzzle({ onExit }: Props) {
     return () => observer.disconnect();
   }, [scatter]);
 
-  // the clock ticks from the first touch until the last piece is in
+  // the clock ticks from the first touch until the game is won or lost
   useEffect(() => {
-    if (startedAt === null || won) return;
-    const timer = setInterval(() => setNow(performance.now()), 250);
+    if (startedAt === null || won || lost) return;
+    const timer = setInterval(() => setNow(performance.now()), 100);
     return () => clearInterval(timer);
-  }, [startedAt, won]);
+  }, [startedAt, won, lost]);
+
+  // cancel any ongoing drag if time runs out or moves are exhausted
+  useEffect(() => {
+    if (lost && drag.current) {
+      drag.current = null;
+      setDraggingId(null);
+    }
+  }, [lost]);
 
   const restart = () => {
     const fresh = makePieces();
@@ -233,18 +259,20 @@ export default function JigsawPuzzle({ onExit }: Props) {
   };
 
   const onPointerDown = (e: ReactPointerEvent<SVGGElement>, piece: Piece) => {
-    if (piece.placed || won || drag.current) return;
+    if (piece.placed || won || lost || drag.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = { id: piece.id, pointer: e.pointerId, startX: e.clientX, startY: e.clientY, fromX: piece.x, fromY: piece.y };
     setDraggingId(piece.id);
     setOrder((o) => [...o.filter((id) => id !== piece.id), piece.id]);
     if (startedAt === null) {
-      setStartedAt(e.timeStamp);
-      setNow(e.timeStamp);
+      const t = performance.now();
+      setStartedAt(t);
+      setNow(t);
     }
   };
 
   const onPointerMove = (e: ReactPointerEvent<SVGGElement>) => {
+    if (lost || won) return;
     const d = drag.current;
     if (!d || d.pointer !== e.pointerId || !layout) return;
     const x = d.fromX + (e.clientX - d.startX) / layout.scale;
@@ -257,6 +285,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
     if (!d || d.pointer !== e.pointerId) return;
     drag.current = null;
     setDraggingId(null);
+    if (lost || won) return;
+
     setMoves((m) => m + 1);
     const next = pieces.map((p) => {
       if (p.id !== d.id) return p;
@@ -266,10 +296,11 @@ export default function JigsawPuzzle({ onExit }: Props) {
     });
     setPieces(next);
     // the last piece is in: stop the clock
-    if (next.every((p) => p.placed)) setFinishedIn(e.timeStamp - (startedAt ?? e.timeStamp));
+    if (next.every((p) => p.placed)) {
+      setFinishedIn(performance.now() - (startedAt ?? performance.now()));
+    }
   };
 
-  const elapsed = finishedIn ?? (startedAt === null ? 0 : Math.max(0, now - startedAt));
   // stacking: placed pieces underneath, then the loose ones in their draw order. It's done with z-index
   // rather than DOM order, so picking a piece up never moves its node (which would restart its toss-in
   // animation and drop the pointer capture mid-drag)
@@ -282,8 +313,21 @@ export default function JigsawPuzzle({ onExit }: Props) {
     <div ref={container} className="relative h-full w-full touch-none select-none overflow-hidden bg-[#120a1f]">
       <style>{`
         @keyframes casper-toss {
-          from { opacity: 0; transform: translateY(-28px) scale(0.3) rotate(-25deg); }
-          to { opacity: 1; transform: none; }
+          0% {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-36px) scale(0.25) rotate(-22deg);
+          }
+          65% {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(6px) scale(1.08) rotate(4deg);
+          }
+          100% {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1) rotate(0deg);
+          }
         }
       `}</style>
       {/* the night behind everything: a dim, blurred copy of the poster shows until the animated night has loaded over it */}
@@ -308,14 +352,20 @@ export default function JigsawPuzzle({ onExit }: Props) {
           Piece Casper Back Together
         </h2>
         <div className="flex items-center gap-4 text-sm font-bold text-white/85">
-          <span className="flex items-center gap-1.5">
-            <Timer className="h-4 w-4" style={{ color: ACCENT }} />
-            {formatTime(elapsed)}
+          <span
+            className={`flex items - center gap - 1.5 transition - colors ${
+  timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
+} `}
+          >
+            <Timer className="h-4 w-4" style={{ color: timeLeftMs <= 10000 && startedAt !== null ? "#ff5c7a" : ACCENT }} />
+            {formatCountdown(timeLeftMs)}
           </span>
           <span>
             {placedCount}/{pieces.length} pieces
           </span>
-          <span>{moves} moves</span>
+          <span className={`transition - colors ${ movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : "" } `}>
+            {movesLeft} moves left
+          </span>
         </div>
       </div>
 
@@ -352,18 +402,37 @@ export default function JigsawPuzzle({ onExit }: Props) {
             pieces.map((p) => {
               const dragging = draggingId === p.id;
               const left = layout.boardLeft + (p.x - MARGIN) * k;
+              const top = layout.boardTop + (p.y - MARGIN) * k;
+
+              const isPortrait = layout.width < layout.height * 0.9;
+              const isLeftTray = left < layout.boardLeft + (IMAGE.width * k) / 2;
+              const normY = Math.max(0, Math.min(1, (top - layout.boardTop) / Math.max(layout.height - layout.boardTop, 1)));
+
+              // Casper flies:
+              // ~0.4s-1.3s up the left side,
+              // ~1.4s-1.8s across the top,
+              // ~1.9s-2.8s down the right side.
+              const delay = p.placed
+                ? 0
+                : isPortrait
+                  ? 0.45 + Math.max(0, Math.min(1, left / layout.width)) * 2.0 + (p.id % 4) * 0.08
+                  : isLeftTray
+                    ? 0.4 + (1 - normY) * 0.85 + (p.id % 3) * 0.08
+                    : 1.95 + normY * 0.85 + (p.id % 3) * 0.08;
+
               return (
                 <svg
                   key={`${round}-${p.id}`}
                   className="pointer-events-none absolute"
                   style={{
                     left,
-                    top: layout.boardTop + (p.y - MARGIN) * k,
+                    top,
                     width: pieceBox.w,
                     height: pieceBox.h,
                     zIndex: p.placed ? 0 : stack.get(p.id) ?? 1,
-                    animation: reducedMotion ? undefined : "casper-toss 0.6s cubic-bezier(0.2, 0.9, 0.3, 1.25) both",
-                    animationDelay: `${(0.5 + (Math.max(left, 0) / layout.width) * (ARRIVAL_SECONDS * 0.55)).toFixed(2)}s`,
+                    animation: reducedMotion || p.placed ? undefined : "casper-toss 0.65s cubic-bezier(0.2, 0.9, 0.3, 1.25) both",
+                    animationDelay: reducedMotion || p.placed ? undefined : `${delay.toFixed(2)}s`,
+                    transformOrigin: "center center",
                     filter: p.placed
                       ? "none"
                       : dragging
@@ -381,7 +450,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
                   </defs>
                   <g
                     clipPath={`url(#${uid}-piece-${p.id})`}
-                    style={{ pointerEvents: p.placed || won ? "none" : "auto", cursor: dragging ? "grabbing" : "grab" }}
+                    style={{ pointerEvents: p.placed || won || lost ? "none" : "auto", cursor: dragging ? "grabbing" : "grab" }}
                     onPointerDown={(e) => onPointerDown(e, p)}
                     onPointerMove={onPointerMove}
                     onPointerUp={onPointerUp}
@@ -408,7 +477,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
         <button
           type="button"
           onClick={() => setPeek((v) => !v)}
-          disabled={won}
+          disabled={won || lost}
           className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 disabled:opacity-40 cursor-pointer"
         >
           {peek ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -424,10 +493,11 @@ export default function JigsawPuzzle({ onExit }: Props) {
         </button>
       </div>
 
-      {/* solved */}
+      {/* solved / lost */}
       <AnimatePresence>
         {won && (
           <motion.div
+            key="won-modal"
             className="absolute inset-0 z-30 flex items-end justify-center bg-linear-to-t from-black/80 via-black/20 to-transparent p-6 pb-10"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -452,7 +522,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 Casper Is Free!
               </h3>
               <p className="mt-2 text-sm text-[#d7cced]">
-                Solved in <span className="font-black text-white">{formatTime(elapsed)}</span> with{" "}
+                Solved in <span className="font-black text-white">{formatElapsed(elapsed)}</span> with{" "}
                 <span className="font-black text-white">{moves}</span> moves.
               </p>
               <div className="mt-6 flex flex-col gap-3">
@@ -463,6 +533,60 @@ export default function JigsawPuzzle({ onExit }: Props) {
                   style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
                 >
                   Play again
+                </button>
+                <button
+                  type="button"
+                  onClick={onExit}
+                  className="w-full py-1 text-sm text-[#a495bf] transition-colors hover:text-white cursor-pointer"
+                >
+                  Back to the flavours
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+
+        {lost && (
+          <motion.div
+            key="lost-modal"
+            className="absolute inset-0 z-30 flex items-end justify-center bg-linear-to-t from-black/80 via-black/20 to-transparent p-6 pb-10"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <motion.div
+              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(255,92,122,0.35)]"
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.2 }}
+            >
+              <motion.div
+                className="relative mx-auto -mt-20 h-32 w-32 filter drop-shadow-[0_0_24px_rgba(255,92,122,0.7)]"
+                animate={reducedMotion ? undefined : { y: [0, -6, 0], rotate: [-2, 2, -2] }}
+                transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain opacity-75 grayscale-25" />
+              </motion.div>
+              <h3 className="font-creepster mt-1 text-4xl uppercase tracking-wider text-[#ff5c7a]">
+                {lostReason === "time" ? "Time's Up!" : "Out of Moves!"}
+              </h3>
+              <p className="mt-2 text-sm text-[#d7cced]">
+                {lostReason === "time"
+                  ? "Time ran out before Casper could be pieced together!"
+                  : "You used all 50 moves before finishing the puzzle!"}
+                <br />
+                Placed <span className="font-black text-white">{placedCount}/{pieces.length}</span> pieces.
+              </p>
+              <div className="mt-6 flex flex-col gap-3">
+                <button
+                  type="button"
+                  onClick={restart}
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
+                >
+                  <RotateCcw className="h-4 w-4" />
+                  Try again
                 </button>
                 <button
                   type="button"

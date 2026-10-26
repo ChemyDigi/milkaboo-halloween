@@ -17,7 +17,13 @@ export default function IntroScreen({ busy = false, onStart }: Props) {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
-        <h1 className="game__title game__title--haunt mt-2 text-[clamp(2.1rem,10vw,3.5rem)] text-(--g-text)">
+        <h1
+          className="font-creepster mt-2 text-center text-3xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:text-4xl select-none"
+          style={{
+            color: "#ff7cbe",
+            textShadow: "0 0 24px rgba(255, 124, 190, 0.5), 0 2px 10px rgba(0,0,0,0.9)",
+          }}
+        >
           {copy.title}
         </h1>
         <p className="mt-1 max-w-xs text-sm text-(--g-muted) [@media(max-height:700px)]:hidden">{copy.tagline}</p>

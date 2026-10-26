@@ -2,7 +2,7 @@
 export const BRAND = "Milkaboo";
 
 export const copy = {
-  title: `Free the ${BRAND} Cup`,
+  title: "Free the Rose Cup",
   tagline: "A ghost has wrapped itself around your bubble tea. Suck it off before time runs out and free the cup!",
   start: "Start Game",
   hygiene: "Keep the phone a finger's width from your mouth. No licking the ghost.",

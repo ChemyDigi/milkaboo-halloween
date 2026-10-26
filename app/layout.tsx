@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Lato } from "next/font/google";
+import { Creepster, Lato } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+
+const creepster = Creepster({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-creepster",
+  display: "swap",
+});
 
 const bherisi = localFont({
   src: "../public/fonts/Bherisi-Regular.ttf",
@@ -40,7 +47,10 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${bherisi.variable} ${jamoaScript.variable} ${lato.variable} ${mainstay.variable}`}>
+    <html
+      lang="en"
+      className={`${bherisi.variable} ${jamoaScript.variable} ${lato.variable} ${mainstay.variable} ${creepster.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
