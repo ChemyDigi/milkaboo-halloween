@@ -38,7 +38,12 @@ export default function LoseScreen({ peak, busy = false, onRetry, onHome }: Prop
           <div className="h-full rounded-full bg-(--g-pumpkin)" style={{ width: `${pct}%` }} />
         </div>
 
-        <button type="button" className="game__button mt-5 w-full cursor-pointer" onClick={onRetry} disabled={busy}>
+        <button
+          type="button"
+          className="game__button mt-5 w-full cursor-pointer bg-[#ff7cbe] text-[#1a0b26] font-black shadow-[0_0_32px_rgba(255,124,190,0.55)] hover:bg-[#ff5faf]"
+          onClick={onRetry}
+          disabled={busy}
+        >
           <RotateCcw size={18} /> {copy.lose.tryAgain}
         </button>
         <button type="button" className="mt-3 block w-full text-center text-sm text-(--g-muted) hover:text-white transition-colors cursor-pointer" onClick={onHome}>

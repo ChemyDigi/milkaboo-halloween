@@ -3,11 +3,12 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Gamepad2, Sparkles, X, ChevronRight, Award } from "lucide-react";
+import { Gamepad2, X, Award } from "lucide-react";
 import WickedRoseGame from "@/components/games/wicked-rose/WickedRoseGame";
 import CasperCustardGame from "@/components/games/casper-custard/CasperCustardGame";
 import HauntedAppleGame from "@/components/games/haunted-apple/HauntedAppleGame";
 import BlackcurrantBeastGame from "@/components/games/blackcurrant-beast/BlackcurrantBeastGame";
+import SpookyAmbience from "@/components/SpookyAmbience";
 
 /** which game a flavour's ghost challenges you to */
 type GameKind = "rose" | "custard" | "apple" | "beast";
@@ -434,45 +435,15 @@ export default function HalloweenExperience() {
         }
       `}</style>
 
+      {/* Background soundtrack, quiet while a game (with its own sounds and mic) is open */}
+      <SpookyAmbience paused={activeGame !== null} />
+
       {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
         <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
         <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
       </div>
-
-      {/* Floating Animated Ghost Emojis */}
-      <motion.div
-        className="pointer-events-none fixed top-28 left-[6%] z-20 hidden lg:block opacity-65"
-        animate={{
-          y: [0, -18, 0],
-          x: [0, 8, 0],
-          rotate: [-4, 4, -4],
-        }}
-        transition={{
-          duration: 5.5,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        <span className="text-4xl filter drop-shadow-[0_0_15px_rgba(255,255,255,0.8)]">👻</span>
-      </motion.div>
-
-      <motion.div
-        className="pointer-events-none fixed top-36 right-[8%] z-20 hidden lg:block opacity-65"
-        animate={{
-          y: [0, 18, 0],
-          x: [0, -8, 0],
-          rotate: [4, -4, 4],
-        }}
-        transition={{
-          duration: 6.2,
-          repeat: Infinity,
-          ease: "easeInOut",
-        }}
-      >
-        <span className="text-4xl filter drop-shadow-[0_0_15px_rgba(255,124,190,0.8)]">🦇</span>
-      </motion.div>
 
       {/* ========================================================================= */}
       {/* HERO SECTION: Full-width haunted mansion background with floating cup   */}
@@ -506,8 +477,27 @@ export default function HalloweenExperience() {
           <div className="absolute bottom-0 inset-x-0 h-64 bg-linear-to-t from-[#0d0618]/80 via-[#0d0618]/40 to-transparent" />
         </div>
 
+        {/* Top of Home Page: Centered Haunted Neon Logo */}
+        <motion.div
+          className="absolute top-4 sm:top-6 inset-x-0 z-20 flex justify-center pointer-events-auto"
+          initial={{ opacity: 0, y: -20, scale: 0.9 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <div className="relative h-18 sm:h-22 md:h-26 aspect-72/102 transition-transform duration-300 hover:scale-105 filter drop-shadow-[0_0_20px_rgba(255,140,40,0.7)] hover:drop-shadow-[0_0_35px_rgba(255,140,40,0.95)] cursor-pointer">
+            <Image
+              src="/images/haunted_neon_logo.png"
+              alt="Milkaboo Haunted Logo"
+              fill
+              priority
+              sizes="(max-width: 640px) 70px, 90px"
+              className="object-contain select-none"
+            />
+          </div>
+        </motion.div>
+
         {/* Hero Interactive Content Container */}
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 py-10 sm:py-16 lg:py-24">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8 pt-24 pb-10 sm:pt-28 sm:pb-16 lg:pt-32 lg:pb-24">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-4 items-center">
 
             {/* Left Column: Headlines, Description & Play & Win CTA */}
@@ -561,28 +551,6 @@ export default function HalloweenExperience() {
                   free the cups!
                 </span>
               </motion.p>
-
-              {/* PLAY GAME Button with Warm Glowing Gradient */}
-              <motion.div
-                className="mt-8 flex flex-col sm:flex-row items-center gap-4"
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.35 }}
-              >
-                <button
-                  type="button"
-                  onClick={() => setActiveGame("rose")}
-                  className="group relative inline-flex items-center justify-center gap-3.5 overflow-hidden rounded-full px-9 py-4 font-black tracking-wider uppercase text-[#241a33] transition-all duration-300 hover:scale-105 active:scale-95 shadow-[0_0_40px_rgba(254,183,124,0.65)] hover:shadow-[0_0_60px_rgba(255,124,190,0.9)] cursor-pointer"
-                  style={{
-                    background: "linear-gradient(135deg, #fed778 0%, #feb273 50%, #ff8ab2 100%)",
-                  }}
-                >
-                  {/* Subtle sheen highlight */}
-                  <span className="absolute inset-0 bg-white/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                  <Gamepad2 className="h-6 w-6 text-[#241a33] transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110" />
-                  <span className="text-lg sm:text-xl font-black">PLAY GAME</span>
-                </button>
-              </motion.div>
             </motion.div>
 
             {/* Right Column: Milkaboo Cup with Ghosts placed over the misty mansion */}
@@ -714,8 +682,8 @@ export default function HalloweenExperience() {
                 whileHover={{
                   y: -10,
                   scale: 1.025,
-                  borderColor: flavor.borderGlow,
-                  boxShadow: `0 20px 45px rgba(0, 0, 0, 0.85), 0 0 35px ${flavor.glowColor}`,
+                  borderColor: "rgba(255, 255, 255, 0.2)",
+                  boxShadow: "0 25px 50px rgba(0, 0, 0, 0.85)",
                 }}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
@@ -723,12 +691,6 @@ export default function HalloweenExperience() {
                 transition={{ duration: 0.5, delay: index * 0.12 }}
                 onClick={() => setSelectedFlavor(flavor)}
               >
-                {/* Glowing Card Aura on Hover */}
-                <div
-                  className="pointer-events-none absolute -inset-1 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur-xl -z-10"
-                  style={{ background: flavor.glowColor }}
-                />
-
                 <div className="relative">
                   {/* Card Visual Stage */}
                   <div className="relative aspect-3/4 w-full overflow-hidden rounded-2xl bg-black/40 flex flex-col justify-between p-4">
@@ -752,7 +714,7 @@ export default function HalloweenExperience() {
 
                     {/* Flavor Spotlight Radial Glow */}
                     <div
-                      className="absolute inset-0 opacity-40 group-hover:opacity-75 transition-opacity duration-500"
+                      className="absolute inset-0 opacity-40 transition-opacity duration-500"
                       style={{
                         background: `radial-gradient(circle at 50% 60%, ${flavor.glowColor} 0%, transparent 70%)`,
                       }}
@@ -777,15 +739,6 @@ export default function HalloweenExperience() {
                         </div>
                       </>
                     )}
-
-                    {/* Hover Quick Action Pill */}
-                    <div className={`relative z-10 ${flavor.posterImage ? "mt-auto" : ""} translate-y-3 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-between rounded-xl bg-black/80 px-3.5 py-2 backdrop-blur-md border border-white/10 shadow-lg`}>
-                      <span className="text-xs font-bold text-white flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-yellow-300" />
-                        Free this flavour
-                      </span>
-                      <ChevronRight className="w-4 h-4 text-white/80" />
-                    </div>
                   </div>
 
                   {/* Ghost cut-out: same box as the poster above, but not clipped by the stage */}
@@ -909,33 +862,34 @@ export default function HalloweenExperience() {
                   </p>
                 </div>
 
-                {/* Challenge Action Button */}
-                <div className="mt-6 flex w-full flex-col gap-3">
+                {/* Challenge Action Buttons */}
+                <div className="mt-7 flex w-full flex-col gap-3">
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedFlavor(null);
                       setActiveGame(selectedFlavor.game);
                     }}
-                    className="flex w-full items-center justify-center gap-2 rounded-full py-3.5 font-black text-[#241a33] transition-all hover:scale-103 cursor-pointer shadow-lg"
+                    className="group relative flex w-full items-center justify-center gap-3 rounded-2xl py-4 px-6 font-black tracking-wider uppercase text-[#0e0717] transition-all duration-150 cursor-pointer select-none shadow-[0_6px_0_rgba(0,0,0,0.45),0_14px_28px_rgba(0,0,0,0.5)] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.45),0_6px_14px_rgba(0,0,0,0.5)]"
                     style={{
-                      background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)",
+                      backgroundColor: selectedFlavor.themeColor,
                     }}
                   >
-                    <Gamepad2 className="h-5 w-5" />
-                    <span>
+                    <Gamepad2 className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110 text-[#0e0717]" />
+                    <span className="text-sm sm:text-base font-black tracking-wider">
                       {selectedFlavor.game === "custard" && "Play Casper's Jigsaw"}
                       {selectedFlavor.game === "apple" && "Play Apple Boba Catch"}
                       {selectedFlavor.game === "beast" && "Play Shadow Beast Swat"}
                       {selectedFlavor.game === "rose" && "Free the Rose Cup"}
                     </span>
                   </button>
+
                   <button
                     type="button"
                     onClick={() => setSelectedFlavor(null)}
-                    className="w-full text-center text-xs text-[#a495bf] hover:text-white py-1 transition-colors cursor-pointer"
+                    className="flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold tracking-wide text-[#c7bcd8] transition-all hover:bg-white/10 hover:border-white/30 hover:text-white active:scale-[0.99] cursor-pointer"
                   >
-                    Close & pick another
+                    Pick another flavour
                   </button>
                 </div>
               </div>
@@ -955,15 +909,15 @@ export default function HalloweenExperience() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
-            {/* Exit Game Floating Bar */}
-            <div className="absolute top-4 left-4 z-50">
+            {/* Exit Game Floating Button */}
+            <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-50">
               <button
                 type="button"
                 onClick={() => setActiveGame(null)}
-                className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 py-2 text-sm font-bold text-white/90 backdrop-blur-md hover:bg-black/80 hover:text-white transition-all shadow-lg cursor-pointer"
+                aria-label="Exit game"
+                className="group flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/40 hover:bg-black/80 hover:text-white active:scale-95 cursor-pointer"
               >
-                <X className="h-4 w-4" />
-                <span>Exit Challenge</span>
+                <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
               </button>
             </div>
 

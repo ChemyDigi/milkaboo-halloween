@@ -166,7 +166,7 @@ export default function Game() {
   }, [debug, mic]);
 
   return (
-    <>
+    <div className="game fixed inset-0">
       <div className="absolute inset-0" aria-hidden="true">
         <Scene state={sceneState} tier={tier} reducedMotion={reducedMotion} />
       </div>
@@ -205,6 +205,6 @@ export default function Game() {
       </AnimatePresence>
 
       {debug && <DebugPanel mic={mic} hud={loop.hud} tier={tier} />}
-    </>
+    </div>
   );
 }
