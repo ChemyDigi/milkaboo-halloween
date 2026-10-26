@@ -104,6 +104,24 @@ const FLAVORS: FlavorCard[] = [
   },
 ];
 
+/* ---------- the flavour popup: a WANTED poster for the ghost ---------- */
+
+/** old dark paper, with the ghost's glow bleeding through behind the mugshot */
+const paper = (glow: string) =>
+  `radial-gradient(ellipse 70% 32% at 50% 30%, ${glow}, transparent 70%), radial-gradient(ellipse at 90% 95%, rgba(255, 255, 255, 0.05), transparent 45%), linear-gradient(160deg, #261742 0%, #180c2b 55%, #110720 100%)`;
+/** paper grain (pale speckle), drawn by an SVG noise filter so it costs no download */
+const PAPER_GRAIN = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='220' height='220'><filter id='g'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.5 0 0 0 0'/></filter><rect width='220' height='220' filter='url(%23g)'/></svg>")`;
+/** the poster's bottom edge, torn: a clip-path polygon with a deterministic jagged edge */
+const TORN_EDGE = (() => {
+  const points = ["0% 0%", "100% 0%"];
+  const teeth = 26;
+  for (let i = teeth; i >= 0; i--) {
+    const depth = 96.4 + ((i * 7) % 5) * 0.6 + (i % 2) * 0.8;
+    points.push(`${((i / teeth) * 100).toFixed(1)}% ${depth.toFixed(1)}%`);
+  }
+  return `polygon(${points.join(", ")})`;
+})();
+
 // Stylized ghost character badge floating over each flavor cup
 function FlavorGhostBadge({ type, color }: { type: FlavorCard["ghostType"]; color: string }) {
   if (type === "apple") {
@@ -780,120 +798,168 @@ export default function HalloweenExperience() {
       </div>
 
       {/* ========================================================================= */}
-      {/* FLAVOUR DETAILS MODAL: Interactive Lore & Play Challenge Trigger          */}
+      {/* FLAVOUR DETAILS MODAL: a WANTED poster for the ghost that took the cup   */}
       {/* ========================================================================= */}
       <AnimatePresence>
         {selectedFlavor && (
           <motion.div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 z-50 overflow-y-auto bg-black/80 backdrop-blur-md"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             onClick={() => setSelectedFlavor(null)}
           >
-            <motion.div
-              className="relative w-full max-w-lg overflow-hidden rounded-3xl border border-white/20 bg-[#160b29] p-6 shadow-2xl sm:p-8"
-              style={{
-                boxShadow: `0 25px 60px rgba(0, 0, 0, 0.9), 0 0 50px ${selectedFlavor.glowColor}`,
-              }}
-              initial={{ scale: 0.9, y: 20 }}
-              animate={{ scale: 1, y: 0 }}
-              exit={{ scale: 0.9, y: 20 }}
-              onClick={(e) => e.stopPropagation()}
+            {/* Close: pinned to the screen, off the paper */}
+            <button
+              type="button"
+              onClick={() => setSelectedFlavor(null)}
+              className="group fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:border-white/40 hover:text-white cursor-pointer"
+              aria-label="Close details"
             >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setSelectedFlavor(null)}
-                className="absolute top-5 right-5 z-20 flex h-9 w-9 items-center justify-center rounded-full bg-white/10 text-white/80 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                aria-label="Close details"
+              <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
+            </button>
+
+            <div className="flex min-h-full items-center justify-center px-4 pt-14 pb-6 sm:pt-20">
+              <motion.div
+                role="dialog"
+                aria-modal="true"
+                aria-label={`Wanted: ${selectedFlavor.ghostTitle}`}
+                className="relative w-full max-w-[380px]"
+                style={{
+                  transformOrigin: "50% -60px",
+                  filter: `drop-shadow(0 30px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 28px ${selectedFlavor.glowColor})`,
+                }}
+                initial={{ y: -70, rotate: -8, opacity: 0 }}
+                animate={{ y: 0, rotate: -1.5, opacity: 1 }}
+                exit={{ y: 50, rotate: 5, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 150, damping: 15 }}
+                onClick={(e) => e.stopPropagation()}
               >
-                <X className="h-5 w-5" />
-              </button>
+                {/* strips of tape holding it up */}
+                <div aria-hidden className="absolute -top-3 left-5 z-20 h-7 w-24 -rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
+                <div aria-hidden className="absolute -top-3 right-5 z-20 h-7 w-24 rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
 
-              <div className="flex flex-col items-center text-center">
-                {/* Flavor Cup Image Preview */}
-                <div
-                  className="relative h-64 w-52 overflow-hidden rounded-2xl p-4 flex items-center justify-center"
-                  style={{
-                    background: `radial-gradient(circle, ${selectedFlavor.glowColor} 0%, rgba(22, 11, 41, 0.9) 70%)`,
-                  }}
-                >
-                  {selectedFlavor.posterImage ? (
-                    <Image
-                      src={selectedFlavor.posterImage}
-                      alt={selectedFlavor.fullName}
-                      fill
-                      sizes="208px"
-                      className="object-cover object-[center_30%]"
-                    />
-                  ) : (
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={selectedFlavor.cupImage}
-                        alt={selectedFlavor.fullName}
-                        fill
-                        sizes="208px"
-                        className="object-contain filter drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
-                      />
+                {/* the paper */}
+                <div className="relative overflow-hidden px-7 pt-6 pb-9 text-[#f6f0ff]" style={{ clipPath: TORN_EDGE, background: paper(selectedFlavor.glowColor) }}>
+                  <div aria-hidden className="pointer-events-none absolute inset-0 opacity-20 mix-blend-screen" style={{ backgroundImage: PAPER_GRAIN }} />
+                  {/* a ring left by a cup */}
+                  <div aria-hidden className="pointer-events-none absolute -left-12 top-[62%] h-36 w-36 rounded-full border-[7px] border-white/8 blur-[1px]" />
+
+                  {/* heading */}
+                  <div className="relative text-center">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#bfb0d9]/70">
+                      Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
+                    </p>
+                    <h3 className="font-bherisi mt-1 text-[58px] leading-none tracking-[0.1em] sm:text-[64px]">WANTED</h3>
+                    <p className="mt-2 border-y-2 border-white/25 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">
+                      For the haunting of a Milkaboo cup
+                    </p>
+                  </div>
+
+                  {/* the mugshot: a photo glued on, the ghost drifting up out of it. A 4:5 photo with a
+                      box 125% as tall is the poster's own 2:3, so none of the ghost is cropped away. */}
+                  <div className="relative mx-auto mt-14 w-[62%] rotate-[1.5deg]">
+                    <div className="relative aspect-4/5 overflow-hidden border-[6px] border-[#efe8f7] bg-[#1a0f24] shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
+                      {selectedFlavor.posterImage ? (
+                        <div className={`absolute inset-x-0 bottom-0 ${selectedFlavor.ghostImage ? "h-[125%]" : "top-0"}`}>
+                          <Image
+                            src={selectedFlavor.posterImage}
+                            alt={selectedFlavor.fullName}
+                            fill
+                            sizes="320px"
+                            className="object-cover object-center select-none"
+                          />
+                        </div>
+                      ) : (
+                        <Image
+                          src={selectedFlavor.cupImage}
+                          alt={selectedFlavor.fullName}
+                          fill
+                          sizes="320px"
+                          className="object-contain p-4 select-none"
+                        />
+                      )}
                     </div>
-                  )}
-                </div>
+                    {/* same box as the photo (inside its white border), but not clipped by it */}
+                    {selectedFlavor.posterImage && selectedFlavor.ghostImage && (
+                      <div className="pointer-events-none absolute inset-[6px]">
+                        <motion.div
+                          className="absolute inset-x-0 bottom-0 h-[125%]"
+                          animate={{ y: [0, -5, 0] }}
+                          transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
+                        >
+                          <Image
+                            src={selectedFlavor.ghostImage}
+                            alt=""
+                            fill
+                            sizes="320px"
+                            className="object-cover object-center select-none"
+                            style={{ filter: `drop-shadow(0 -4px 12px ${selectedFlavor.glowColor})` }}
+                          />
+                        </motion.div>
+                      </div>
+                    )}
+                    {/* stamped over the corner */}
+                    <div
+                      aria-hidden
+                      className="absolute -right-7 bottom-4 rotate-[-12deg] border-[3px] border-double bg-[#170b27]/80 px-2 py-0.5 text-sm font-black uppercase tracking-[0.25em] opacity-90"
+                      style={{ borderColor: selectedFlavor.themeColor, color: selectedFlavor.themeColor }}
+                    >
+                      At large
+                    </div>
+                  </div>
 
-                <div className="mt-5">
-                  <span
-                    className="inline-block rounded-full px-3.5 py-1 text-xs font-bold tracking-wide uppercase text-white/90"
-                    style={{ background: selectedFlavor.badgeBg }}
-                  >
-                    {selectedFlavor.ghostTitle}
-                  </span>
+                  {/* who, and what they took */}
+                  <div className="relative mt-5">
+                    <p className="font-mainstay text-[32px] leading-none" style={{ color: selectedFlavor.themeColor }}>
+                      {selectedFlavor.ghostTitle}
+                    </p>
+                    <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bfb0d9]/70">Last seen possessing the</p>
+                    <p className="font-bherisi mt-0.5 text-[26px] uppercase leading-none tracking-wider">{selectedFlavor.fullName}</p>
+                    <p className="mt-2.5 text-[13px] leading-relaxed text-[#c7bcd8]">{selectedFlavor.desc}</p>
+                  </div>
 
-                  <h3
-                    className="font-creepster mt-3 text-3xl sm:text-4xl font-black uppercase tracking-wider"
-                    style={{
-                      color: selectedFlavor.themeColor,
-                    }}
-                  >
-                    {selectedFlavor.fullName}
-                  </h3>
-
-                  <p className="mt-3 text-sm text-[#c7bcd8] leading-relaxed max-w-sm">
-                    {selectedFlavor.desc}
-                  </p>
-                </div>
-
-                {/* Challenge Action Buttons */}
-                <div className="mt-7 flex w-full flex-col gap-3">
+                  {/* bring them in */}
                   <button
                     type="button"
                     onClick={() => {
                       setSelectedFlavor(null);
                       setActiveGame(selectedFlavor.game);
                     }}
-                    className="group relative flex w-full items-center justify-center gap-3 rounded-2xl py-4 px-6 font-black tracking-wider uppercase text-[#0e0717] transition-all duration-150 cursor-pointer select-none shadow-[0_6px_0_rgba(0,0,0,0.45),0_14px_28px_rgba(0,0,0,0.5)] hover:brightness-105 active:translate-y-1 active:shadow-[0_2px_0_rgba(0,0,0,0.45),0_6px_14px_rgba(0,0,0,0.5)]"
+                    className="group relative mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
                     style={{
+                      // globals.css resets button font/colour/padding outside Tailwind's layers, so set them here
+                      padding: "0.9rem 1.1rem 0.9rem 1.25rem",
+                      color: "#0e0717",
                       backgroundColor: selectedFlavor.themeColor,
+                      boxShadow: `inset 0 0 0 2px ${selectedFlavor.themeColor}, inset 0 0 0 4px #0e0717, 0 0 28px ${selectedFlavor.glowColor}`,
                     }}
                   >
-                    <Gamepad2 className="h-5 w-5 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110 text-[#0e0717]" />
-                    <span className="text-sm sm:text-base font-black tracking-wider">
-                      {selectedFlavor.game === "custard" && "Play Casper's Jigsaw"}
-                      {selectedFlavor.game === "apple" && "Play Apple Boba Catch"}
-                      {selectedFlavor.game === "beast" && "Play Shadow Beast Swat"}
-                      {selectedFlavor.game === "rose" && "Free the Rose Cup"}
+                    <span className="flex flex-col items-start text-left">
+                      <span className="text-[9px] font-bold uppercase tracking-[0.35em] opacity-70">Bring them in · play</span>
+                      <span className="font-bherisi text-xl uppercase leading-tight tracking-wider">
+                        {selectedFlavor.game === "custard" && "Casper's Jigsaw"}
+                        {selectedFlavor.game === "apple" && "Apple Boba Catch"}
+                        {selectedFlavor.game === "beast" && "Shadow Beast Swat"}
+                        {selectedFlavor.game === "rose" && "Free the Rose Cup"}
+                      </span>
                     </span>
+                    <Gamepad2 className="h-7 w-7 shrink-0 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedFlavor(null)}
-                    className="flex w-full items-center justify-center rounded-xl border border-white/15 bg-white/5 py-3 text-sm font-semibold tracking-wide text-[#c7bcd8] transition-all hover:bg-white/10 hover:border-white/30 hover:text-white active:scale-[0.99] cursor-pointer"
+                    className="relative mt-4 w-full text-[#bfb0d9]/70 transition-colors hover:text-white cursor-pointer"
+                    style={{ padding: "0.25rem 0" }}
                   >
-                    Pick another flavour
+                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] underline decoration-dotted underline-offset-4">
+                      Not your ghost? Pick another flavour
+                    </span>
                   </button>
                 </div>
-              </div>
-            </motion.div>
+              </motion.div>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
