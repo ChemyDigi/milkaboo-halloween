@@ -926,7 +926,7 @@ export default function HalloweenExperience() {
                     <span>
                       {selectedFlavor.game === "custard" && "Play Casper's Jigsaw"}
                       {selectedFlavor.game === "apple" && "Play Apple Boba Catch"}
-                      {selectedFlavor.game === "beast" && "Play Shadow Beast Swat"}
+                      {selectedFlavor.game === "beast" && "Play Beast's Cup Shuffle"}
                       {selectedFlavor.game === "rose" && "Free the Rose Cup"}
                     </span>
                   </button>
