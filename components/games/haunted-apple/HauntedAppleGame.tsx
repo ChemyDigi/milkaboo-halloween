@@ -11,6 +11,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { CupSoda, Flame, Heart, Hourglass, RotateCcw, Skull, Timer, Trophy, Zap } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
@@ -27,9 +28,11 @@ const GOLD = "#ffd23f";
 const SLIME = "#8bff3c";
 const CURSE = "#c084fc";
 const DANGER = "#ff5c7a";
-const POSTER = "/games/haunted-apple/Neon Ghost Matcha Boo Poster.png";
-/** the ghost + cup cut-out; only its top (the ghost) is shown, fading out where it wraps the cup */
-const GHOST = { src: "/games/haunted-apple/ghost-cutout-apple.png", width: 1122, height: 1402, crop: { x: 230, w: 560, h: 420 } };
+const BACKDROP = "/games/haunted-apple/Moonlit Haunted Lake Terrace (1).png";
+/** the Phantom on its broom (square art); it flies to the right, so it's mirrored while heading left */
+const GHOST_SRC = "/games/haunted-apple/Neon Ghost Riding a Mystic Broom.png";
+/** the scare, red-eyed: bats, things watching from the dark, a spider on its thread */
+const EYE = "#ff4d2e";
 
 /* ---------- the rules: tune the difficulty here ---------- */
 /** pearls to fill the cup */
@@ -169,6 +172,8 @@ interface View {
   cupX: number;
   tilt: number;
   ghostX: number;
+  /** 1 while the Phantom flies right, -1 while it flies left */
+  ghostDir: 1 | -1;
   drops: Drop[];
   pops: Pop[];
   sparks: (Spark & { age: number })[];
@@ -256,6 +261,7 @@ const snapshot = (s: World): View => {
     cupX: s.cupX,
     tilt: s.tilt,
     ghostX: s.ghostX,
+    ghostDir: s.ghostV < 0 ? -1 : 1,
     drops: s.drops.map((d) => ({ ...d })),
     pops: s.pops.slice(),
     sparks: s.sparks.map((p) => ({ ...p, age: s.clock - p.born })),
@@ -308,29 +314,78 @@ function subscribeBest(cb: () => void) {
 }
 const useBest = () => useSyncExternalStore(subscribeBest, readBest, () => 0);
 
-/** the Spooky Phantom, cropped out of the poster cut-out */
-function GhostArt({ rage = false }: { rage?: boolean }) {
-  // the glow sits on a wrapper: a filter on the masked element itself gets clipped to a visible box
+/** the Spooky Phantom on its broom; it turns around (a quick squash through the middle) when it changes direction */
+function GhostArt({ rage = false, dir = 1, size }: { rage?: boolean; dir?: 1 | -1; size: string }) {
   return (
     <div
+      className="relative aspect-square"
       style={{
-        filter: rage ? `drop-shadow(0 0 34px ${SLIME}) saturate(1.35) brightness(1.1)` : "drop-shadow(0 0 22px rgba(139,255,60,0.6))",
-        transition: "filter 300ms ease",
+        filter: rage ? `drop-shadow(0 0 30px ${SLIME}) saturate(1.35) brightness(1.1)` : "drop-shadow(0 0 18px rgba(139,255,60,0.55))",
+        transform: `scaleX(${dir})`,
+        transition: "filter 300ms ease, transform 260ms ease-in-out",
       }}
     >
-      <div
-        role="img"
-        aria-label="The Spooky Phantom"
-        style={{
-          aspectRatio: `${GHOST.crop.w} / ${GHOST.crop.h}`,
-          backgroundImage: `url("${GHOST.src}")`,
-          backgroundSize: `${(GHOST.width / GHOST.crop.w) * 100}% auto`,
-          backgroundPosition: `${(GHOST.crop.x / (GHOST.width - GHOST.crop.w)) * 100}% 0%`,
-          maskImage: "linear-gradient(to bottom, black 58%, transparent 92%)",
-          WebkitMaskImage: "linear-gradient(to bottom, black 58%, transparent 92%)",
-        }}
-      />
+      <Image src={GHOST_SRC} alt="The Spooky Phantom" fill sizes={size} loading="eager" draggable={false} className="object-contain" />
     </div>
+  );
+}
+
+/** a bat seen from below; the wings beat (flip about the shoulders) at the given rate */
+function Bat({ size, flap = 0.26 }: { size: number; flap?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size * 0.42}
+      viewBox="0 0 100 42"
+      className="overflow-visible"
+      style={{ "--flap": `${flap}s` } as CSSProperties}
+      aria-hidden
+    >
+      <g fill="#04070a">
+        <path
+          className="ha-wing"
+          d="M46 13 C38 6 22 4 2 9 C8 12 10 16 9 20 C14 17 19 18 21 22 C25 18 31 19 33 23 C37 19 42 20 47 22 Z"
+        />
+        <path
+          className="ha-wing"
+          d="M54 13 C62 6 78 4 98 9 C92 12 90 16 91 20 C86 17 81 18 79 22 C75 18 69 19 67 23 C63 19 58 20 53 22 Z"
+        />
+        <ellipse cx="50" cy="19" rx="5" ry="9" />
+        <circle cx="50" cy="10" r="4.6" />
+        <path d="M46.4 8 L45.6 2 L48.8 6 Z M53.6 8 L54.4 2 L51.2 6 Z" />
+      </g>
+      <circle cx="48.3" cy="10" r="1" fill={EYE} />
+      <circle cx="51.7" cy="10" r="1" fill={EYE} />
+    </svg>
+  );
+}
+
+/** a spider dangling on its thread */
+function Spider() {
+  return (
+    <svg width="34" height="34" viewBox="0 0 40 40" className="overflow-visible" aria-hidden>
+      <g stroke="#04070a" strokeWidth="1.7" fill="none" strokeLinecap="round">
+        <path d="M17 17 Q9 9 4 13 M17 19 Q8 15 2 21 M17 21 Q8 22 4 30 M18 23 Q12 28 10 36" />
+        <path d="M23 17 Q31 9 36 13 M23 19 Q32 15 38 21 M23 21 Q32 22 36 30 M22 23 Q28 28 30 36" />
+      </g>
+      <ellipse cx="20" cy="25" rx="6" ry="7.5" fill="#04070a" />
+      <circle cx="20" cy="15.5" r="4" fill="#04070a" />
+      <circle cx="18.6" cy="15" r="0.95" fill={EYE} />
+      <circle cx="21.4" cy="15" r="0.95" fill={EYE} />
+    </svg>
+  );
+}
+
+/** a jagged fork of lightning, drawn top-down */
+function Bolt() {
+  return (
+    <svg viewBox="0 0 60 200" className="h-full w-auto overflow-visible" aria-hidden>
+      <g fill="none" stroke="#f4fff6" strokeLinecap="round" strokeLinejoin="round">
+        <polyline strokeWidth="2.4" points="30,0 24,30 33,52 21,84 29,104 14,140 20,158 9,200" />
+        <polyline strokeWidth="1.3" points="24,30 12,48 15,62 6,78" />
+        <polyline strokeWidth="1.3" points="21,84 36,110 33,128 42,150" />
+      </g>
+    </svg>
   );
 }
 
@@ -521,6 +576,59 @@ function Leaf({ size }: { size: number }) {
       <path d="M3 16 L16 4" stroke="#2f7f1c" strokeWidth="1.2" strokeLinecap="round" />
     </svg>
   );
+}
+
+/** bats cross the sky now and then (top in %, flip = right to left); the small ones read as far away */
+const BATS = [
+  { top: 9, size: 34, dur: 15, delay: 2, dy: 26, flap: 0.24, flip: false },
+  { top: 17, size: 18, dur: 22, delay: 9, dy: 14, flap: 0.18, flip: true },
+  { top: 27, size: 26, dur: 17, delay: 13, dy: 30, flap: 0.28, flip: false },
+  { top: 12, size: 14, dur: 25, delay: 5, dy: 12, flap: 0.17, flip: true },
+  { top: 36, size: 42, dur: 12, delay: 7, dy: 38, flap: 0.3, flip: true },
+  { top: 21, size: 16, dur: 20, delay: 16, dy: 12, flap: 0.18, flip: false },
+];
+
+/** red eyes that open in the dark at the edges, blink, and are gone (left/top in %) */
+const EYES = [
+  { left: 3, top: 58, size: 6, delay: 1, dur: 9 },
+  { left: 92, top: 49, size: 5, delay: 5, dur: 11 },
+  { left: 11, top: 73, size: 4, delay: 8, dur: 13 },
+];
+
+/** where each bat in a rage swarm flies, in px from the Phantom */
+const SWARM = [
+  { dx: -230, dy: -110, size: 34, delay: 0 },
+  { dx: 210, dy: -140, size: 30, delay: 0.05 },
+  { dx: -150, dy: 120, size: 24, delay: 0.1 },
+  { dx: 260, dy: 60, size: 38, delay: 0.02 },
+  { dx: -300, dy: 10, size: 28, delay: 0.14 },
+  { dx: 120, dy: -200, size: 20, delay: 0.18 },
+  { dx: -70, dy: -190, size: 22, delay: 0.08 },
+  { dx: 330, dy: -40, size: 26, delay: 0.12 },
+  { dx: 60, dy: 160, size: 18, delay: 0.2 },
+];
+
+/** a cloud of bats bursting out of the Phantom when it flies into a rage; it stays where the rage began */
+function BatSwarm({ x, y }: { x: number; y: number }) {
+  const [from] = useState({ x, y });
+  return SWARM.map((b, i) => (
+    <motion.div
+      key={i}
+      className="pointer-events-none absolute z-10"
+      style={{ left: from.x - b.size / 2, top: from.y - b.size * 0.21 }}
+      initial={{ x: 0, y: 0, opacity: 0, scale: 0.3 }}
+      animate={{
+        x: [0, b.dx * 0.45, b.dx],
+        y: [0, b.dy * 0.4 - 30, b.dy],
+        opacity: [0, 1, 1, 0],
+        scale: [0.3, 1, 1.2],
+        rotate: [0, b.dx > 0 ? 12 : -12, 0],
+      }}
+      transition={{ duration: 1.5, delay: b.delay, ease: "easeOut" }}
+    >
+      <Bat size={b.size} flap={0.14} />
+    </motion.div>
+  ));
 }
 
 function Legend({ kind, label, value, color, note }: { kind: DropKind; label: string; value: string; color: string; note: string }) {
@@ -853,8 +961,9 @@ export default function HauntedAppleGame({ onClose }: Props) {
   const urgent = phase === "playing" && timeLeft <= 10;
   const playing = phase === "playing";
   const rage = playing && !!view?.rage;
-  const ghostW = view ? Math.min(220, Math.max(150, view.w * 0.45)) : 200;
-  const ghostTop = GHOST_Y - ghostW * 0.42;
+  const ghostW = view ? Math.min(250, Math.max(160, view.w * 0.48)) : 220;
+  // the art is square; this puts the broom, where the drops come from, at GHOST_Y
+  const ghostTop = GHOST_Y - ghostW * 0.5;
   const outcome = view?.outcome;
 
   return (
@@ -867,6 +976,19 @@ export default function HauntedAppleGame({ onClose }: Props) {
           100% { transform: translate3d(var(--dx), 108vh, 0) rotate(680deg); opacity: 0; }
         }
         @keyframes ha-fog { 0% { transform: translateX(-6%) scale(1); } 100% { transform: translateX(6%) scale(1.08); } }
+        @keyframes ha-drift { 0% { transform: scale(1.04) translate3d(0, 0, 0); } 100% { transform: scale(1.1) translate3d(-1.5%, -1%, 0); } }
+        @keyframes ha-flash { 0%, 29%, 33%, 74%, 78%, 100% { opacity: 0; } 29.6% { opacity: 0.4; } 30.4% { opacity: 0.06; } 31.2% { opacity: 0.3; } 74.6% { opacity: 0.32; } 75.6% { opacity: 0; } 76.2% { opacity: 0.18; } }
+        @keyframes ha-bolt-a { 0%, 29%, 32%, 100% { opacity: 0; } 29.6%, 31.2% { opacity: 1; } 30.4% { opacity: 0.2; } }
+        @keyframes ha-bolt-b { 0%, 74%, 77%, 100% { opacity: 0; } 74.6%, 76.2% { opacity: 1; } 75.6% { opacity: 0; } }
+        @keyframes ha-flap { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(-0.5); } }
+        @keyframes ha-bat-fly { 0% { transform: translate3d(-12%, 0, 0); } 65%, 100% { transform: translate3d(112%, 0, 0); } }
+        @keyframes ha-bat-bob { 0%, 100% { transform: translateY(0) rotate(-7deg); } 50% { transform: translateY(var(--dy)) rotate(7deg); } }
+        @keyframes ha-eyes {
+          0%, 42%, 100% { opacity: 0; transform: scaleY(1); }
+          8%, 18%, 21%, 32% { opacity: 1; transform: scaleY(1); }
+          19.5% { opacity: 1; transform: scaleY(0.1); }
+        }
+        @keyframes ha-spider { 0%, 100% { transform: translateY(40px) rotate(-5deg); } 50% { transform: translateY(150px) rotate(5deg); } }
         @keyframes ha-wobble { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.1, 0.9); } }
         @keyframes ha-bubble { 0% { transform: translateY(0); opacity: 0; } 25% { opacity: 0.85; } 100% { transform: translateY(-34px); opacity: 0; } }
         @keyframes ha-flicker { 0%, 100% { opacity: 1; } 92% { opacity: 1; } 93% { opacity: 0.5; } 94% { opacity: 1; } 97% { opacity: 0.75; } 98% { opacity: 1; } }
@@ -875,24 +997,97 @@ export default function HauntedAppleGame({ onClose }: Props) {
         .ha-wobble { animation: ha-wobble 0.6s ease-in-out infinite; }
         .ha-bubble { animation: ha-bubble 2.4s ease-out infinite; }
         .ha-flicker { animation: ha-flicker 6s infinite; }
+        .ha-fog-back { animation: ha-fog 13s ease-in-out -5s infinite alternate-reverse; }
+        .ha-drift { animation: ha-drift 32s ease-in-out infinite alternate; }
+        .ha-flash { animation: ha-flash 17s linear infinite; }
+        .ha-bolt-a { animation: ha-bolt-a 17s linear infinite; }
+        .ha-bolt-b { animation: ha-bolt-b 17s linear infinite; }
+        .ha-wing { transform-origin: 50px 15px; animation: ha-flap var(--flap) ease-in-out infinite; }
+        .ha-bat-fly { animation: ha-bat-fly var(--dur) linear var(--delay) infinite; }
+        .ha-bat-bob { animation: ha-bat-bob var(--bob) ease-in-out infinite; }
+        .ha-eyes { animation: ha-eyes var(--dur) ease-in-out var(--delay) infinite; }
+        .ha-spider { animation: ha-spider 9s ease-in-out infinite; }
         @media (prefers-reduced-motion: reduce) {
-          .ha-leaf, .ha-fog, .ha-wobble, .ha-bubble, .ha-flicker { animation: none; }
+          .ha-leaf, .ha-fog, .ha-fog-back, .ha-wobble, .ha-bubble, .ha-flicker, .ha-drift, .ha-flash, .ha-bolt-a, .ha-bolt-b, .ha-wing,
+          .ha-bat-fly, .ha-bat-bob, .ha-eyes, .ha-spider { animation: none; }
         }
       `}</style>
 
-      {/* the night: a dim, blurred copy of the poster, fog, falling leaves and a vignette */}
+      {/* the night: the moonlit lake terrace, a storm, bats, eyes in the dark, fog, falling leaves and a vignette */}
       <div className="pointer-events-none absolute inset-0" aria-hidden>
+        {/* on a narrow screen, keep the moon and the castle in view */}
+        <div className="ha-drift absolute inset-0">
+          <Image
+            src={BACKDROP}
+            alt=""
+            fill
+            sizes="100vw"
+            loading="eager"
+            className="object-cover object-[78%_50%] sm:object-center"
+          />
+        </div>
+        <div className="absolute inset-0 bg-[#050b04]/30" />
+        {/* lightning: two strikes a cycle, each with its own fork */}
+        <div className="ha-flash absolute inset-0 bg-[#e6fff0] opacity-0" />
+        <div className="ha-bolt-a absolute left-[16%] top-0 h-[42%] opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
+          <Bolt />
+        </div>
+        <div className="ha-bolt-b absolute right-[30%] top-0 h-[30%] -scale-x-100 opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
+          <Bolt />
+        </div>
+        {!reduceMotion && (
+          <>
+            {BATS.map((b, i) => (
+              <div key={i} className={`absolute inset-x-0 ${b.flip ? "-scale-x-100" : ""}`} style={{ top: `${b.top}%` }}>
+                <div className="ha-bat-fly w-full" style={{ "--dur": `${b.dur}s`, "--delay": `-${b.delay}s` } as CSSProperties}>
+                  <div
+                    className="ha-bat-bob inline-block drop-shadow-[0_0_5px_rgba(139,255,60,0.35)]"
+                    style={{ "--dy": `${b.dy}px`, "--bob": `${(b.dur / 7).toFixed(2)}s` } as CSSProperties}
+                  >
+                    <Bat size={b.size} flap={b.flap} />
+                  </div>
+                </div>
+              </div>
+            ))}
+            {EYES.map((e, i) => (
+              <span
+                key={i}
+                className="ha-eyes absolute flex opacity-0"
+                style={{ left: `${e.left}%`, top: `${e.top}%`, gap: e.size * 1.4, "--dur": `${e.dur}s`, "--delay": `-${e.delay}s` } as CSSProperties}
+              >
+                {[12, -12].map((tilt) => (
+                  <span
+                    key={tilt}
+                    className="block rounded-full"
+                    style={{
+                      width: e.size * 1.7,
+                      height: e.size,
+                      background: `radial-gradient(circle at 50% 55%, #ffe1a8 0%, ${EYE} 45%, #6b0d05 100%)`,
+                      boxShadow: `0 0 ${e.size * 2}px ${EYE}`,
+                      transform: `rotate(${tilt}deg)`,
+                    }}
+                  />
+                ))}
+              </span>
+            ))}
+            {/* the thread starts above the top edge, so it never shows its end */}
+            <div className="ha-spider absolute -top-[200px] left-[7%] flex flex-col items-center drop-shadow-[0_0_6px_rgba(139,255,60,0.4)]">
+              <span className="block h-[200px] w-px bg-white/30" />
+              <Spider />
+            </div>
+          </>
+        )}
+        {/* fog rolling over the lake and the terrace */}
         <div
-          className="absolute inset-0 scale-110 bg-cover bg-center opacity-30 blur-2xl"
-          style={{ backgroundImage: `url("${encodeURI(POSTER)}")` }}
+          className="ha-fog absolute inset-x-[-15%] bottom-0 h-1/2 opacity-60"
+          style={{
+            background:
+              "radial-gradient(ellipse 45% 40% at 25% 85%, rgba(205,255,215,0.32), transparent 70%), radial-gradient(ellipse 50% 35% at 75% 95%, rgba(163,255,132,0.28), transparent 70%)",
+          }}
         />
         <div
-          className="absolute -left-1/4 top-1/4 h-1/2 w-[150%] opacity-50 blur-3xl"
-          style={{ background: "radial-gradient(ellipse at center, rgba(139,255,60,0.22), transparent 60%)" }}
-        />
-        <div
-          className="ha-fog absolute inset-x-[-10%] bottom-0 h-2/5 opacity-40 blur-2xl"
-          style={{ background: "radial-gradient(ellipse at 50% 100%, rgba(163,255,132,0.35), transparent 65%)" }}
+          className="ha-fog-back absolute inset-x-[-15%] bottom-[18%] h-1/4 opacity-50"
+          style={{ background: "radial-gradient(ellipse 60% 45% at 55% 60%, rgba(190,255,200,0.22), transparent 70%)" }}
         />
         {!reduceMotion &&
           LEAVES.map((l, i) => (
@@ -904,8 +1099,8 @@ export default function HauntedAppleGame({ onClose }: Props) {
               <Leaf size={l.size} />
             </span>
           ))}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(5,12,4,0.85)_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-40 bg-linear-to-b from-[#0b1409]/90 to-transparent" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,8,3,0.8)_100%)]" />
+        <div className="absolute inset-x-0 top-0 h-36 bg-linear-to-b from-[#0b1409]/80 to-transparent" />
       </div>
 
       {/* flash when slime or a phantom pearl lands in the cup */}
@@ -1051,8 +1246,23 @@ export default function HauntedAppleGame({ onClose }: Props) {
               />
             )}
           </AnimatePresence>
-          <GhostArt rage={rage} />
+          <GhostArt rage={rage} dir={view?.ghostDir} size="250px" />
         </motion.div>
+
+        {/* a rage cracks the sky open and lets the bats out */}
+        <AnimatePresence>
+          {rage && (
+            <motion.div
+              key="rage-flash"
+              className="pointer-events-none absolute inset-0 z-0 bg-[#e6fff0]"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: [0, 0.45, 0.05, 0.3, 0] }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.6, times: [0, 0.15, 0.35, 0.5, 1] }}
+            />
+          )}
+        </AnimatePresence>
+        {rage && !reduceMotion && view && <BatSwarm x={view.ghostX} y={GHOST_Y} />}
 
         {/* what the Phantom has to say */}
         <AnimatePresence>
@@ -1060,7 +1270,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             <motion.div
               key={view.taunt.id}
               className="pointer-events-none absolute z-20"
-              style={{ left: view.ghostX, top: ghostTop + 4, x: "-50%", y: "-100%" }}
+              style={{ left: view.ghostX, top: ghostTop + ghostW * 0.14, x: "-50%", y: "-100%" }}
               initial={{ opacity: 0, scale: 0.6, rotate: -6 }}
               animate={{ opacity: 1, scale: 1, rotate: 0 }}
               exit={{ opacity: 0, scale: 0.8 }}
@@ -1237,12 +1447,12 @@ export default function HauntedAppleGame({ onClose }: Props) {
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
             >
               <motion.div
-                className="pointer-events-none absolute -top-[4.5rem] left-1/2 w-40 -translate-x-1/2"
+                className="pointer-events-none absolute -top-24 left-1/2 w-36 -translate-x-1/2"
                 aria-hidden
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <GhostArt />
+                <GhostArt size="144px" />
               </motion.div>
               <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#a9c99a]">The Spooky Phantom&apos;s</p>
               <h3 className="font-creepster mt-0.5 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
