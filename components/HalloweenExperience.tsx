@@ -328,7 +328,7 @@ function SpookyFlavorBackdrop() {
         {BATS.map((bat, i) => (
           <motion.div
             key={i}
-            className="absolute"
+            className="absolute will-change-transform"
             style={{ top: bat.top, left: 0 }}
             initial={{ x: bat.reverse ? "105vw" : "-10vw" }}
             animate={{
@@ -344,7 +344,7 @@ function SpookyFlavorBackdrop() {
               width={bat.size}
               height={bat.size / 2}
               viewBox="0 0 64 32"
-              className={`opacity-60 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)] ${bat.reverse ? "-scale-x-100" : ""}`}
+              className={`opacity-60 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)] will-change-transform ${bat.reverse ? "-scale-x-100" : ""}`}
               animate={{ scaleY: [1, 0.35, 1] }}
               transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -456,12 +456,17 @@ export default function HalloweenExperience() {
       {/* Background soundtrack, quiet while a game (with its own sounds and mic) is open */}
       <SpookyAmbience paused={activeGame !== null} />
 
-      {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
-        <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
-        <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
-      </div>
+      {/* Main page content (hidden when a game is active so background animations and heavy filters do not consume GPU/CPU) */}
+      <div
+        style={{ display: activeGame !== null ? "none" : undefined }}
+        aria-hidden={activeGame !== null}
+      >
+        {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
+          <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
+          <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
+        </div>
 
       {/* ========================================================================= */}
       {/* HERO SECTION: Full-width haunted mansion background with floating cup   */}
@@ -693,7 +698,7 @@ export default function HalloweenExperience() {
             {FLAVORS.map((flavor, index) => (
               <motion.div
                 key={flavor.id}
-                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 backdrop-blur-md cursor-pointer transition-all duration-300`}
+                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 backdrop-blur-md cursor-pointer transition-all duration-300 mx-auto w-full max-w-sm sm:max-w-none`}
                 style={{
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.02)",
                 }}
@@ -796,6 +801,7 @@ export default function HalloweenExperience() {
           </div>
         </section>
       </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* FLAVOUR DETAILS MODAL: a WANTED poster for the ghost that took the cup   */}
@@ -813,53 +819,52 @@ export default function HalloweenExperience() {
             <button
               type="button"
               onClick={() => setSelectedFlavor(null)}
-              className="group fixed top-[max(1rem,env(safe-area-inset-top))] right-[max(1rem,env(safe-area-inset-right))] z-20 flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:border-white/40 hover:text-white cursor-pointer"
+              className="group fixed top-[max(0.75rem,env(safe-area-inset-top))] right-[max(0.75rem,env(safe-area-inset-right))] z-20 flex size-10 sm:size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 transition-colors hover:border-white/40 hover:text-white cursor-pointer"
               aria-label="Close details"
             >
               <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
             </button>
 
-            <div className="flex min-h-full items-center justify-center px-4 pt-14 pb-6 sm:pt-20">
+            <div className="flex min-h-full items-center justify-center px-3 py-6 sm:px-4 sm:py-10">
               <motion.div
                 role="dialog"
                 aria-modal="true"
                 aria-label={`Wanted: ${selectedFlavor.ghostTitle}`}
-                className="relative w-full max-w-[380px]"
+                className="relative w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[390px] md:max-w-[410px]"
                 style={{
-                  transformOrigin: "50% -60px",
+                  transformOrigin: "center center",
                   filter: `drop-shadow(0 30px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 28px ${selectedFlavor.glowColor})`,
                 }}
-                initial={{ y: -70, rotate: -8, opacity: 0 }}
-                animate={{ y: 0, rotate: -1.5, opacity: 1 }}
-                exit={{ y: 50, rotate: 5, opacity: 0 }}
-                transition={{ type: "spring", stiffness: 150, damping: 15 }}
+                initial={{ y: -50, rotate: -4, opacity: 0 }}
+                animate={{ y: 0, rotate: -1, opacity: 1 }}
+                exit={{ y: 40, rotate: 3, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 180, damping: 18 }}
                 onClick={(e) => e.stopPropagation()}
               >
                 {/* strips of tape holding it up */}
-                <div aria-hidden className="absolute -top-3 left-5 z-20 h-7 w-24 -rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
-                <div aria-hidden className="absolute -top-3 right-5 z-20 h-7 w-24 rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
+                <div aria-hidden className="absolute -top-3 left-4 sm:left-5 z-20 h-6 sm:h-7 w-20 sm:w-24 -rotate-3 sm:-rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
+                <div aria-hidden className="absolute -top-3 right-4 sm:right-5 z-20 h-6 sm:h-7 w-20 sm:w-24 rotate-3 sm:rotate-6 bg-[#fff6dc]/30 shadow-[0_1px_2px_rgba(0,0,0,0.35)] backdrop-blur-[1px]" />
 
                 {/* the paper */}
-                <div className="relative overflow-hidden px-7 pt-6 pb-9 text-[#f6f0ff]" style={{ clipPath: TORN_EDGE, background: paper(selectedFlavor.glowColor) }}>
+                <div className="relative overflow-hidden px-5 pt-5 pb-8 sm:px-7 sm:pt-6 sm:pb-9 text-[#f6f0ff]" style={{ clipPath: TORN_EDGE, background: paper(selectedFlavor.glowColor) }}>
                   <div aria-hidden className="pointer-events-none absolute inset-0 opacity-20 mix-blend-screen" style={{ backgroundImage: PAPER_GRAIN }} />
                   {/* a ring left by a cup */}
                   <div aria-hidden className="pointer-events-none absolute -left-12 top-[62%] h-36 w-36 rounded-full border-[7px] border-white/8 blur-[1px]" />
 
                   {/* heading */}
                   <div className="relative text-center">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.4em] text-[#bfb0d9]/70">
+                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-[#bfb0d9]/70">
                       Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
                     </p>
-                    <h3 className="font-bherisi mt-1 text-[58px] leading-none tracking-[0.1em] sm:text-[64px]">WANTED</h3>
-                    <p className="mt-2 border-y-2 border-white/25 py-1 text-[10px] font-bold uppercase tracking-[0.18em]">
+                    <h3 className="font-bherisi mt-1 text-[44px] sm:text-[54px] md:text-[60px] leading-none tracking-[0.08em] sm:tracking-[0.1em]">WANTED</h3>
+                    <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em]">
                       For the haunting of a Milkaboo cup
                     </p>
                   </div>
 
-                  {/* the mugshot: a photo glued on, the ghost drifting up out of it. A 4:5 photo with a
-                      box 125% as tall is the poster's own 2:3, so none of the ghost is cropped away. */}
-                  <div className="relative mx-auto mt-14 w-[62%] rotate-[1.5deg]">
-                    <div className="relative aspect-4/5 overflow-hidden border-[6px] border-[#efe8f7] bg-[#1a0f24] shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
+                  {/* the mugshot: a photo glued on, the ghost drifting up out of it */}
+                  <div className="relative mx-auto mt-4 sm:mt-6 w-[52%] sm:w-[56%] max-w-[230px] rotate-[1.5deg]">
+                    <div className="relative aspect-4/5 overflow-hidden border-[5px] sm:border-[6px] border-[#efe8f7] bg-[#1a0f24] shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
                       {selectedFlavor.posterImage ? (
                         <div className={`absolute inset-x-0 bottom-0 ${selectedFlavor.ghostImage ? "h-[125%]" : "top-0"}`}>
                           <Image
@@ -882,7 +887,7 @@ export default function HalloweenExperience() {
                     </div>
                     {/* same box as the photo (inside its white border), but not clipped by it */}
                     {selectedFlavor.posterImage && selectedFlavor.ghostImage && (
-                      <div className="pointer-events-none absolute inset-[6px]">
+                      <div className="pointer-events-none absolute inset-[5px] sm:inset-[6px]">
                         <motion.div
                           className="absolute inset-x-0 bottom-0 h-[125%]"
                           animate={{ y: [0, -5, 0] }}
@@ -902,7 +907,7 @@ export default function HalloweenExperience() {
                     {/* stamped over the corner */}
                     <div
                       aria-hidden
-                      className="absolute -right-7 bottom-4 rotate-[-12deg] border-[3px] border-double bg-[#170b27]/80 px-2 py-0.5 text-sm font-black uppercase tracking-[0.25em] opacity-90"
+                      className="absolute -right-4 sm:-right-7 bottom-3 sm:bottom-4 rotate-[-12deg] border-[2px] sm:border-[3px] border-double bg-[#170b27]/80 px-1.5 sm:px-2 py-0.5 text-xs sm:text-sm font-black uppercase tracking-[0.2em] sm:tracking-[0.25em] opacity-90"
                       style={{ borderColor: selectedFlavor.themeColor, color: selectedFlavor.themeColor }}
                     >
                       At large
@@ -910,13 +915,22 @@ export default function HalloweenExperience() {
                   </div>
 
                   {/* who, and what they took */}
-                  <div className="relative mt-5">
-                    <p className="font-mainstay text-[32px] leading-none" style={{ color: selectedFlavor.themeColor }}>
+                  <div className="relative mt-4 sm:mt-5 text-left">
+                    <p
+                      className="font-mainstay text-2xl sm:text-[28px] md:text-[32px] leading-snug sm:leading-tight py-1 px-0.5 tracking-wide overflow-visible"
+                      style={{ color: selectedFlavor.themeColor }}
+                    >
                       {selectedFlavor.ghostTitle}
                     </p>
-                    <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.3em] text-[#bfb0d9]/70">Last seen possessing the</p>
-                    <p className="font-bherisi mt-0.5 text-[26px] uppercase leading-none tracking-wider">{selectedFlavor.fullName}</p>
-                    <p className="mt-2.5 text-[13px] leading-relaxed text-[#c7bcd8]">{selectedFlavor.desc}</p>
+                    <p className="mt-2 sm:mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#bfb0d9]/70">
+                      Last seen possessing the
+                    </p>
+                    <p className="font-bherisi mt-0.5 text-[22px] sm:text-[26px] uppercase leading-tight tracking-wider">
+                      {selectedFlavor.fullName}
+                    </p>
+                    <p className="mt-2 sm:mt-2.5 text-xs sm:text-[13px] leading-relaxed text-[#c7bcd8]">
+                      {selectedFlavor.desc}
+                    </p>
                   </div>
 
                   {/* bring them in */}
@@ -926,34 +940,35 @@ export default function HalloweenExperience() {
                       setSelectedFlavor(null);
                       setActiveGame(selectedFlavor.game);
                     }}
-                    className="group relative mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
+                    className="group relative mt-5 sm:mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
                     style={{
-                      // globals.css resets button font/colour/padding outside Tailwind's layers, so set them here
-                      padding: "0.9rem 1.1rem 0.9rem 1.25rem",
+                      padding: "0.75rem 1rem",
                       color: "#0e0717",
                       backgroundColor: selectedFlavor.themeColor,
                       boxShadow: `inset 0 0 0 2px ${selectedFlavor.themeColor}, inset 0 0 0 4px #0e0717, 0 0 28px ${selectedFlavor.glowColor}`,
                     }}
                   >
-                    <span className="flex flex-col items-start text-left">
-                      <span className="text-[9px] font-bold uppercase tracking-[0.35em] opacity-70">Bring them in · play</span>
-                      <span className="font-bherisi text-xl uppercase leading-tight tracking-wider">
+                    <span className="flex flex-col items-start text-left min-w-0 flex-1">
+                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.35em] opacity-70">
+                        Bring them in · play
+                      </span>
+                      <span className="font-bherisi text-lg sm:text-xl uppercase leading-tight tracking-wider truncate max-w-full">
                         {selectedFlavor.game === "custard" && "Casper's Jigsaw"}
                         {selectedFlavor.game === "apple" && "Apple Boba Catch"}
                         {selectedFlavor.game === "beast" && "Shadow Beast Swat"}
                         {selectedFlavor.game === "rose" && "Free the Rose Cup"}
                       </span>
                     </span>
-                    <Gamepad2 className="h-7 w-7 shrink-0 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
+                    <Gamepad2 className="h-6 w-6 sm:h-7 sm:w-7 shrink-0 transition-transform duration-200 group-hover:rotate-12 group-hover:scale-110" />
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setSelectedFlavor(null)}
-                    className="relative mt-4 w-full text-[#bfb0d9]/70 transition-colors hover:text-white cursor-pointer"
+                    className="relative mt-3 sm:mt-4 w-full text-[#bfb0d9]/70 transition-colors hover:text-white cursor-pointer"
                     style={{ padding: "0.25rem 0" }}
                   >
-                    <span className="text-[10px] font-bold uppercase tracking-[0.16em] underline decoration-dotted underline-offset-4">
+                    <span className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-[0.16em] underline decoration-dotted underline-offset-4">
                       Not your ghost? Pick another flavour
                     </span>
                   </button>
@@ -976,19 +991,19 @@ export default function HalloweenExperience() {
             exit={{ opacity: 0 }}
           >
             {/* Exit Game Floating Button */}
-            <div className="absolute top-[max(1rem,env(safe-area-inset-top))] left-[max(1rem,env(safe-area-inset-left))] z-50">
+            <div className="absolute top-[max(0.75rem,env(safe-area-inset-top))] left-[max(0.75rem,env(safe-area-inset-left))] z-50">
               <button
                 type="button"
                 onClick={() => setActiveGame(null)}
                 aria-label="Exit game"
-                className="group flex size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/40 hover:bg-black/80 hover:text-white active:scale-95 cursor-pointer"
+                className="group flex size-10 sm:size-11 items-center justify-center rounded-full border border-white/20 bg-black/60 text-white/80 backdrop-blur-md shadow-lg transition-all duration-200 hover:scale-105 hover:border-white/40 hover:bg-black/80 hover:text-white active:scale-95 cursor-pointer"
               >
                 <X className="h-5 w-5 transition-transform duration-200 group-hover:rotate-90" />
               </button>
             </div>
 
             {/* Render Selected Flavor Game */}
-            <div className="relative h-full w-full flex items-center justify-center p-2 sm:p-4">
+            <div className="relative h-full w-full flex items-center justify-center p-0 sm:p-2">
               {activeGame === "custard" && <CasperCustardGame onExit={() => setActiveGame(null)} />}
               {activeGame === "apple" && <HauntedAppleGame onClose={() => setActiveGame(null)} />}
               {activeGame === "beast" && <BlackcurrantBeastGame onClose={() => setActiveGame(null)} />}

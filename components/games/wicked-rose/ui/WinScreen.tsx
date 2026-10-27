@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Sparkles, Trophy } from "lucide-react";
+import { Trophy } from "lucide-react";
 import { copy } from "@/lib/copy";
 
 interface Props {
@@ -46,7 +46,6 @@ export default function WinScreen({ onDone }: Props) {
           className="game__button w-full bg-[#ff7cbe] text-[#1a0b26] font-black shadow-[0_0_30px_rgba(255,124,190,0.65)] hover:bg-[#ff5faf] cursor-pointer"
           onClick={onDone}
         >
-          <Sparkles size={18} />
           {t.playAgain}
         </button>
       </motion.section>

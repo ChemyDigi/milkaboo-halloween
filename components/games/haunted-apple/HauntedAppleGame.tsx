@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  memo,
   useCallback,
   useEffect,
   useId,
@@ -205,10 +206,15 @@ interface View {
   outcome: Outcome | null;
   cupW: number;
   cupH: number;
+  h: number;
+  ghostY: number;
 }
 
-const GHOST_Y = 180;
 const CUP_BOTTOM = 28;
+
+function ghostY(h: number) {
+  return Math.max(130, Math.min(210, Math.round(h * 0.21)));
+}
 
 function cupSize(w: number) {
   const cw = Math.min(112, Math.max(80, w * 0.21));
@@ -292,6 +298,8 @@ const snapshot = (s: World): View => {
     outcome: s.outcome,
     cupW: cup.w,
     cupH: cup.h,
+    h: s.h,
+    ghostY: ghostY(s.h),
   };
 };
 
@@ -326,7 +334,7 @@ function GhostArt({ rage = false, dir = 1, size }: { rage?: boolean; dir?: 1 | -
     <div
       className="relative aspect-square"
       style={{
-        filter: rage ? `drop-shadow(0 0 30px ${SLIME}) saturate(1.35) brightness(1.1)` : "drop-shadow(0 0 18px rgba(139,255,60,0.55))",
+        filter: rage ? `drop-shadow(0 0 30px ${SLIME}) saturate(1.35) brightness(1.1)` : undefined,
         transform: `scaleX(${dir})`,
         transition: "filter 300ms ease, transform 260ms ease-in-out",
       }}
@@ -425,21 +433,22 @@ function BobaCup({ fill, tilt, slowed }: { fill: number; tilt: number; slowed: b
       <path d={body} fill={`url(#${uid}-glass)`} />
       <g clipPath={`url(#${uid}-body)`}>
         <g transform={`rotate(${(-tilt * 0.6).toFixed(2)} 50 ${level.toFixed(1)})`}>
-          <motion.rect
+          <rect
             x="-30"
+            y={level}
             width="160"
             height="160"
             fill={`url(#${uid}-tea)`}
-            animate={{ y: level }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            style={{ transition: "y 0.12s ease-out" }}
           />
-          <motion.ellipse
+          <ellipse
             cx="50"
+            cy={level}
             rx="60"
             ry="3"
             fill="rgba(255,255,255,0.45)"
-            animate={{ cy: level, opacity: fill > 0 ? 1 : 0 }}
-            transition={{ type: "spring", stiffness: 120, damping: 14 }}
+            opacity={fill > 0 ? 1 : 0}
+            style={{ transition: "cy 0.12s ease-out, opacity 0.2s ease-out" }}
           />
         </g>
         {/* bubbles rise through the tea */}
@@ -501,7 +510,7 @@ function DropArt({ kind }: { kind: DropKind }) {
         className="relative block size-full rounded-full"
         style={{
           background: "radial-gradient(circle at 35% 30%, #8a6450 0%, #3a2418 45%, #120a06 100%)",
-          boxShadow: "0 0 10px rgba(163,255,132,0.35), inset -2px -3px 5px rgba(0,0,0,0.5)",
+          boxShadow: "inset -2px -3px 5px rgba(0,0,0,0.5)",
         }}
       >
         <span className="absolute left-[22%] top-[16%] h-[18%] w-[26%] rounded-full bg-white/55" />
@@ -510,7 +519,7 @@ function DropArt({ kind }: { kind: DropKind }) {
   }
   if (kind === "apple") {
     return (
-      <svg viewBox="0 0 40 40" className="size-full overflow-visible drop-shadow-[0_0_10px_rgba(255,210,63,0.85)]" aria-hidden>
+      <svg viewBox="0 0 40 40" className="size-full overflow-visible" aria-hidden>
         <defs>
           <radialGradient id={`${uid}-a`} cx="0.35" cy="0.3" r="0.75">
             <stop offset="0" stopColor="#fff6c2" />
@@ -535,7 +544,6 @@ function DropArt({ kind }: { kind: DropKind }) {
         className="relative block size-full rounded-full"
         style={{
           background: "radial-gradient(circle at 40% 35%, #ffffff 0%, #ead9ff 25%, #a855f7 65%, #4c1d95 100%)",
-          boxShadow: `0 0 14px ${CURSE}, 0 0 28px rgba(192,132,252,0.45)`,
           opacity: 0.92,
         }}
       >
@@ -552,7 +560,7 @@ function DropArt({ kind }: { kind: DropKind }) {
       style={{
         borderRadius: "50% 50% 45% 45% / 35% 35% 65% 65%",
         background: "radial-gradient(circle at 40% 30%, #eaffb0 0%, #8bff3c 40%, #2f9e12 100%)",
-        boxShadow: `0 0 16px ${SLIME}, 0 0 4px #fff inset`,
+        boxShadow: "inset 0 0 4px #fff",
       }}
     >
       <span className="absolute left-[24%] top-[38%] h-[16%] w-[18%] -rotate-12 rounded-full bg-[#0b2a05]" />
@@ -668,6 +676,99 @@ function Stat({ label, value, color, children }: { label: string; value: string;
   );
 }
 
+const StaticNightBackdrop = memo(function StaticNightBackdrop({ reduceMotion }: { reduceMotion: boolean }) {
+  return (
+    <div className="pointer-events-none absolute inset-0" aria-hidden>
+      {/* on a narrow screen, keep the moon and the castle in view */}
+      <div className="ha-drift absolute inset-0">
+        <Image
+          src={BACKDROP}
+          alt=""
+          fill
+          sizes="100vw"
+          loading="eager"
+          className="object-cover object-[78%_50%] sm:object-center"
+        />
+      </div>
+      <div className="absolute inset-0 bg-[#050b04]/30" />
+      {/* lightning: two strikes a cycle, each with its own fork */}
+      <div className="ha-flash absolute inset-0 bg-[#e6fff0] opacity-0" />
+      <div className="ha-bolt-a absolute left-[16%] top-0 h-[42%] opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
+        <Bolt />
+      </div>
+      <div className="ha-bolt-b absolute right-[30%] top-0 h-[30%] -scale-x-100 opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
+        <Bolt />
+      </div>
+      {!reduceMotion && (
+        <>
+          {BATS.map((b, i) => (
+            <div key={i} className={`absolute inset-x-0 ${b.flip ? "-scale-x-100" : ""}`} style={{ top: `${b.top}%` }}>
+              <div className="ha-bat-fly w-full" style={{ "--dur": `${b.dur}s`, "--delay": `-${b.delay}s` } as CSSProperties}>
+                <div
+                  className="ha-bat-bob inline-block drop-shadow-[0_0_5px_rgba(139,255,60,0.35)]"
+                  style={{ "--dy": `${b.dy}px`, "--bob": `${(b.dur / 7).toFixed(2)}s` } as CSSProperties}
+                >
+                  <Bat size={b.size} flap={b.flap} />
+                </div>
+              </div>
+            </div>
+          ))}
+          {EYES.map((e, i) => (
+            <span
+              key={i}
+              className="ha-eyes absolute flex opacity-0"
+              style={{ left: `${e.left}%`, top: `${e.top}%`, gap: e.size * 1.4, "--dur": `${e.dur}s`, "--delay": `-${e.delay}s` } as CSSProperties}
+            >
+              {[12, -12].map((tilt) => (
+                <span
+                  key={tilt}
+                  className="block rounded-full"
+                  style={{
+                    width: e.size * 1.7,
+                    height: e.size,
+                    background: `radial-gradient(circle at 50% 55%, #ffe1a8 0%, ${EYE} 45%, #6b0d05 100%)`,
+                    boxShadow: `0 0 ${e.size * 2}px ${EYE}`,
+                    transform: `rotate(${tilt}deg)`,
+                  }}
+                />
+              ))}
+            </span>
+          ))}
+          {/* the thread starts above the top edge, so it never shows its end */}
+          <div className="ha-spider absolute -top-[200px] left-[7%] flex flex-col items-center drop-shadow-[0_0_6px_rgba(139,255,60,0.4)]">
+            <span className="block h-[200px] w-px bg-white/30" />
+            <Spider />
+          </div>
+        </>
+      )}
+      {/* fog rolling over the lake and the terrace */}
+      <div
+        className="ha-fog absolute inset-x-[-15%] bottom-0 h-1/2 opacity-60"
+        style={{
+          background:
+            "radial-gradient(ellipse 45% 40% at 25% 85%, rgba(205,255,215,0.32), transparent 70%), radial-gradient(ellipse 50% 35% at 75% 95%, rgba(163,255,132,0.28), transparent 70%)",
+        }}
+      />
+      <div
+        className="ha-fog-back absolute inset-x-[-15%] bottom-[18%] h-1/4 opacity-50"
+        style={{ background: "radial-gradient(ellipse 60% 45% at 55% 60%, rgba(190,255,200,0.22), transparent 70%)" }}
+      />
+      {!reduceMotion &&
+        LEAVES.map((l, i) => (
+          <span
+            key={i}
+            className="ha-leaf absolute top-0"
+            style={{ left: `${l.left}%`, "--dur": `${l.dur}s`, "--delay": `-${l.delay}s`, "--dx": `${l.dx}px` } as CSSProperties}
+          >
+            <Leaf size={l.size} />
+          </span>
+        ))}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,8,3,0.8)_100%)]" />
+      <div className="absolute inset-x-0 top-0 h-36 bg-linear-to-b from-[#0b1409]/80 to-transparent" />
+    </div>
+  );
+});
+
 export default function HauntedAppleGame({ onClose }: Props) {
   const { muted, toggleMute, unlock, play, setAmbience } = useSounds(SOUNDS);
   const reduceMotion = useReducedMotion();
@@ -680,8 +781,29 @@ export default function HauntedAppleGame({ onClose }: Props) {
   const keys = useRef({ left: false, right: false });
   const raf = useRef(0);
 
+  const areaLeft = useRef(0);
   const stop = useCallback(() => cancelAnimationFrame(raf.current), []);
   useEffect(() => stop, [stop]);
+
+  useEffect(() => {
+    const el = area.current;
+    if (!el) return;
+    const updateSize = () => {
+      if (world.current) {
+        world.current.w = el.clientWidth;
+        world.current.h = el.clientHeight;
+      }
+      areaLeft.current = el.getBoundingClientRect().left;
+    };
+    updateSize();
+    const ro = new ResizeObserver(updateSize);
+    ro.observe(el);
+    window.addEventListener("resize", updateSize);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("resize", updateSize);
+    };
+  }, []);
 
   const start = () => {
     unlock();
@@ -729,7 +851,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
         id: s.nextId++,
         kind,
         x: Math.min(s.w - 24, Math.max(24, s.ghostX + rand(-40, 40))),
-        y: GHOST_Y + 30,
+        y: ghostY(s.h) + 28,
         vx: treat ? rand(-0.5, 0.5) * s.w * 0.16 : 0,
         vy: s.h * (0.18 + heat * 0.2) * (rage ? 1.2 : 1),
         spin: rand(-200, 200),
@@ -759,9 +881,6 @@ export default function HauntedAppleGame({ onClose }: Props) {
       const dt = Math.min(0.05, Math.max(0, (now - last) / 1000));
       last = now;
       s.clock += dt;
-      // the play area can change size (rotating a phone)
-      s.w = el.clientWidth;
-      s.h = el.clientHeight;
       const cup = cupSize(s.w);
       const progress = s.fill / GOAL;
 
@@ -938,8 +1057,12 @@ export default function HauntedAppleGame({ onClose }: Props) {
   const aim = (e: ReactPointerEvent<HTMLDivElement>) => {
     const s = world.current;
     if (!s || phase !== "playing") return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    s.targetX = e.clientX - rect.left;
+    s.targetX = e.clientX - areaLeft.current;
+  };
+
+  const handlePointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
+    areaLeft.current = e.currentTarget.getBoundingClientRect().left;
+    aim(e);
   };
 
   // arrow keys / A-D steer on a keyboard
@@ -971,8 +1094,9 @@ export default function HauntedAppleGame({ onClose }: Props) {
   const playing = phase === "playing";
   const rage = playing && !!view?.rage;
   const ghostW = view ? Math.min(250, Math.max(160, view.w * 0.48)) : 220;
-  // the art is square; this puts the broom, where the drops come from, at GHOST_Y
-  const ghostTop = GHOST_Y - ghostW * 0.5;
+  const gy = view?.ghostY ?? 170;
+  // the art is square; this puts the broom, where the drops come from, at gy
+  const ghostTop = gy - ghostW * 0.5;
   const outcome = view?.outcome;
 
   return (
@@ -1023,94 +1147,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
       `}</style>
 
       {/* the night: the moonlit lake terrace, a storm, bats, eyes in the dark, fog, falling leaves and a vignette */}
-      <div className="pointer-events-none absolute inset-0" aria-hidden>
-        {/* on a narrow screen, keep the moon and the castle in view */}
-        <div className="ha-drift absolute inset-0">
-          <Image
-            src={BACKDROP}
-            alt=""
-            fill
-            sizes="100vw"
-            loading="eager"
-            className="object-cover object-[78%_50%] sm:object-center"
-          />
-        </div>
-        <div className="absolute inset-0 bg-[#050b04]/30" />
-        {/* lightning: two strikes a cycle, each with its own fork */}
-        <div className="ha-flash absolute inset-0 bg-[#e6fff0] opacity-0" />
-        <div className="ha-bolt-a absolute left-[16%] top-0 h-[42%] opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
-          <Bolt />
-        </div>
-        <div className="ha-bolt-b absolute right-[30%] top-0 h-[30%] -scale-x-100 opacity-0 drop-shadow-[0_0_10px_rgba(220,255,230,0.9)]">
-          <Bolt />
-        </div>
-        {!reduceMotion && (
-          <>
-            {BATS.map((b, i) => (
-              <div key={i} className={`absolute inset-x-0 ${b.flip ? "-scale-x-100" : ""}`} style={{ top: `${b.top}%` }}>
-                <div className="ha-bat-fly w-full" style={{ "--dur": `${b.dur}s`, "--delay": `-${b.delay}s` } as CSSProperties}>
-                  <div
-                    className="ha-bat-bob inline-block drop-shadow-[0_0_5px_rgba(139,255,60,0.35)]"
-                    style={{ "--dy": `${b.dy}px`, "--bob": `${(b.dur / 7).toFixed(2)}s` } as CSSProperties}
-                  >
-                    <Bat size={b.size} flap={b.flap} />
-                  </div>
-                </div>
-              </div>
-            ))}
-            {EYES.map((e, i) => (
-              <span
-                key={i}
-                className="ha-eyes absolute flex opacity-0"
-                style={{ left: `${e.left}%`, top: `${e.top}%`, gap: e.size * 1.4, "--dur": `${e.dur}s`, "--delay": `-${e.delay}s` } as CSSProperties}
-              >
-                {[12, -12].map((tilt) => (
-                  <span
-                    key={tilt}
-                    className="block rounded-full"
-                    style={{
-                      width: e.size * 1.7,
-                      height: e.size,
-                      background: `radial-gradient(circle at 50% 55%, #ffe1a8 0%, ${EYE} 45%, #6b0d05 100%)`,
-                      boxShadow: `0 0 ${e.size * 2}px ${EYE}`,
-                      transform: `rotate(${tilt}deg)`,
-                    }}
-                  />
-                ))}
-              </span>
-            ))}
-            {/* the thread starts above the top edge, so it never shows its end */}
-            <div className="ha-spider absolute -top-[200px] left-[7%] flex flex-col items-center drop-shadow-[0_0_6px_rgba(139,255,60,0.4)]">
-              <span className="block h-[200px] w-px bg-white/30" />
-              <Spider />
-            </div>
-          </>
-        )}
-        {/* fog rolling over the lake and the terrace */}
-        <div
-          className="ha-fog absolute inset-x-[-15%] bottom-0 h-1/2 opacity-60"
-          style={{
-            background:
-              "radial-gradient(ellipse 45% 40% at 25% 85%, rgba(205,255,215,0.32), transparent 70%), radial-gradient(ellipse 50% 35% at 75% 95%, rgba(163,255,132,0.28), transparent 70%)",
-          }}
-        />
-        <div
-          className="ha-fog-back absolute inset-x-[-15%] bottom-[18%] h-1/4 opacity-50"
-          style={{ background: "radial-gradient(ellipse 60% 45% at 55% 60%, rgba(190,255,200,0.22), transparent 70%)" }}
-        />
-        {!reduceMotion &&
-          LEAVES.map((l, i) => (
-            <span
-              key={i}
-              className="ha-leaf absolute top-0"
-              style={{ left: `${l.left}%`, "--dur": `${l.dur}s`, "--delay": `-${l.delay}s`, "--dx": `${l.dx}px` } as CSSProperties}
-            >
-              <Leaf size={l.size} />
-            </span>
-          ))}
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(3,8,3,0.8)_100%)]" />
-        <div className="absolute inset-x-0 top-0 h-36 bg-linear-to-b from-[#0b1409]/80 to-transparent" />
-      </div>
+      <StaticNightBackdrop reduceMotion={reduceMotion} />
 
       {/* flash when slime or a phantom pearl lands in the cup */}
       <AnimatePresence>
@@ -1220,7 +1257,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
         ref={area}
         className="absolute inset-0 touch-none"
         style={{ cursor: playing ? "ew-resize" : "default" }}
-        onPointerDown={aim}
+        onPointerDown={handlePointerDown}
         onPointerMove={aim}
       >
         {/* the Spooky Phantom */}
@@ -1271,7 +1308,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             />
           )}
         </AnimatePresence>
-        {rage && !reduceMotion && view && <BatSwarm x={view.ghostX} y={GHOST_Y} />}
+        {rage && !reduceMotion && view && <BatSwarm x={view.ghostX} y={gy} />}
 
         {/* what the Phantom has to say */}
         <AnimatePresence>
@@ -1363,7 +1400,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
         {/* the player's cup */}
         {view && (
           <div
-            className="pointer-events-none absolute z-10"
+            className="pointer-events-none absolute z-10 will-change-transform"
             style={{
               left: view.cupX - view.cupW / 2,
               bottom: CUP_BOTTOM,
@@ -1444,13 +1481,13 @@ export default function HauntedAppleGame({ onClose }: Props) {
       <AnimatePresence>
         {phase === "intro" && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/75 px-5 pb-6 pt-24 backdrop-blur-sm sm:items-center sm:pt-20"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 px-5 pb-5 pt-14 text-center shadow-[0_0_60px_rgba(163,255,132,0.3)]"
+              className="relative w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#0f1f0c]/95 px-5 pb-5 pt-12 sm:pt-14 text-center shadow-2xl"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
@@ -1499,8 +1536,12 @@ export default function HauntedAppleGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider text-[#10240a] shadow-[0_0_25px_rgba(163,255,132,0.55)] transition-transform hover:scale-103 active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)` }}
+                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
+                style={{
+                  background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
+                  color: "#0c1f07",
+                  textShadow: "none",
+                }}
               >
                 Start Game
               </button>
@@ -1514,15 +1555,14 @@ export default function HauntedAppleGame({ onClose }: Props) {
       <AnimatePresence>
         {(phase === "won" || phase === "lost") && view && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/70 p-5 backdrop-blur-sm"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.3 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 p-5 text-center"
-              style={{ boxShadow: `0 0 60px ${phase === "won" ? "rgba(163,255,132,0.4)" : "rgba(255,59,92,0.3)"}` }}
+              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#0f1f0c]/95 p-5 sm:p-6 text-center shadow-2xl"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.3 }}
@@ -1533,7 +1573,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                     animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
                     transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1 }}
                   >
-                    <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT, filter: `drop-shadow(0 0 14px ${ACCENT})` }} />
+                    <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT }} />
                   </motion.div>
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
                     Cup Filled!
@@ -1545,7 +1585,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 </>
               ) : outcome === "time" ? (
                 <>
-                  <Hourglass className="mx-auto h-11 w-11" style={{ color: DANGER, filter: `drop-shadow(0 0 12px ${DANGER})` }} />
+                  <Hourglass className="mx-auto h-11 w-11" style={{ color: DANGER }} />
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
                     Time&apos;s Up!
                   </h3>
@@ -1556,7 +1596,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 </>
               ) : (
                 <>
-                  <Skull className="mx-auto h-11 w-11" style={{ color: SLIME, filter: `drop-shadow(0 0 12px ${SLIME})` }} />
+                  <Skull className="mx-auto h-11 w-11" style={{ color: SLIME }} />
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
                     Slimed!
                   </h3>
@@ -1599,8 +1639,12 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black text-[#10240a] transition-transform hover:scale-103 active:scale-95"
-                  style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)` }}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
+                  style={{
+                    background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
+                    color: "#0c1f07",
+                    textShadow: "none",
+                  }}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {outcome === "won" ? "Play again" : "Try again"}

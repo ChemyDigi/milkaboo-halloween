@@ -109,32 +109,57 @@ function makePieces(): Piece[] {
   return pieces;
 }
 
-/** Fits the board to the screen: on top with the pieces below on a phone, centred with pieces either side on wider screens. */
 function computeLayout(width: number, height: number): Layout {
-  const top = 112; // under the Exit button, the title and the stats
-  const bottom = 76; // above the buttons
+  // Adaptive top and bottom margins to fit safe areas, title and controls
+  const top = Math.max(96, Math.min(124, Math.round(height * 0.12)));
+  const bottom = Math.max(68, Math.min(84, Math.round(height * 0.09)));
   const playH = Math.max(height - top - bottom, 200);
-  const portrait = width < height * 0.9;
+
+  // Near-square and portrait aspect ratios (e.g. iPad portrait 3:4, square screens, phones)
+  // place the tray below the board so pieces have plenty of room
+  const portrait = width < height * 1.05;
+
   if (portrait) {
-    const scale = Math.min((width - 32) / IMAGE.width, (playH * 0.5) / IMAGE.height);
+    // Reserve at least enough vertical room for loose pieces to scatter cleanly
+    const trayMinH = Math.max(200, Math.min(380, Math.round(playH * 0.42)));
+    const maxBoardH = playH - trayMinH;
+    const scale = Math.min((width - 40) / IMAGE.width, maxBoardH / IMAGE.height);
     const boardW = IMAGE.width * scale;
     const boardH = IMAGE.height * scale;
     const boardLeft = (width - boardW) / 2;
     const trayTop = top + boardH + 16;
+    const pieceW = PIECE_W * scale;
+    const pieceH = PIECE_H * scale;
+
     return {
       width,
       height,
       scale,
       boardLeft,
       boardTop: top,
-      trays: [{ x: 12, y: trayTop, w: Math.max(width - 24 - PIECE_W * scale, 1), h: Math.max(height - bottom - trayTop - PIECE_H * scale, 1) }],
+      trays: [
+        {
+          x: 16,
+          y: trayTop,
+          w: Math.max(width - 32 - pieceW, 40),
+          h: Math.max(height - bottom - trayTop - pieceH, 60),
+        },
+      ],
     };
   }
-  const scale = Math.min((width * 0.4) / IMAGE.width, playH / IMAGE.height);
+
+  // Landscape mode (wider tablets e.g. 1024x768, 1280x800, desktops):
+  // Trays on left and right sides. Guarantee each tray has ample width for loose pieces.
+  const minTrayW = Math.max(140, Math.round(width * 0.22));
+  const maxBoardW = Math.max(220, width - 2 * minTrayW - 48);
+  const scale = Math.min(maxBoardW / IMAGE.width, playH / IMAGE.height);
   const boardW = IMAGE.width * scale;
   const boardLeft = (width - boardW) / 2;
-  const side = boardLeft - 24 - PIECE_W * scale;
-  const trayH = Math.max(playH - PIECE_H * scale, 1);
+  const pieceW = PIECE_W * scale;
+  const pieceH = PIECE_H * scale;
+  const side = Math.max(boardLeft - 24 - pieceW, 40);
+  const trayH = Math.max(playH - pieceH, 60);
+
   return {
     width,
     height,
@@ -142,8 +167,8 @@ function computeLayout(width: number, height: number): Layout {
     boardLeft,
     boardTop: top,
     trays: [
-      { x: 16, y: top, w: Math.max(side, 1), h: trayH },
-      { x: boardLeft + boardW + 8, y: top, w: Math.max(side, 1), h: trayH },
+      { x: 16, y: top, w: side, h: trayH },
+      { x: boardLeft + boardW + 8, y: top, w: side, h: trayH },
     ],
   };
 }
@@ -187,6 +212,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
   const [now, setNow] = useState(0);
   const [finishedIn, setFinishedIn] = useState<number | null>(null);
   const drag = useRef<{ id: number; pointer: number; startX: number; startY: number; fromX: number; fromY: number } | null>(null);
+  const rafMove = useRef<number | null>(null);
+  const pendingMove = useRef<{ id: number; x: number; y: number } | null>(null);
   const [draggingId, setDraggingId] = useState<number | null>(null);
 
   const won = finishedIn !== null;
@@ -271,18 +298,41 @@ export default function JigsawPuzzle({ onExit }: Props) {
     }
   };
 
+  useEffect(() => {
+    return () => {
+      if (rafMove.current !== null) cancelAnimationFrame(rafMove.current);
+    };
+  }, []);
+
   const onPointerMove = (e: ReactPointerEvent<SVGGElement>) => {
     if (lost || won) return;
     const d = drag.current;
     if (!d || d.pointer !== e.pointerId || !layout) return;
     const x = d.fromX + (e.clientX - d.startX) / layout.scale;
     const y = d.fromY + (e.clientY - d.startY) / layout.scale;
-    setPieces((list) => list.map((p) => (p.id === d.id ? { ...p, x, y } : p)));
+    pendingMove.current = { id: d.id, x, y };
+
+    if (rafMove.current === null) {
+      rafMove.current = requestAnimationFrame(() => {
+        rafMove.current = null;
+        if (pendingMove.current) {
+          const { id, x: px, y: py } = pendingMove.current;
+          setPieces((list) => list.map((p) => (p.id === id ? { ...p, x: px, y: py } : p)));
+        }
+      });
+    }
   };
 
   const onPointerUp = (e: ReactPointerEvent<SVGGElement>) => {
     const d = drag.current;
     if (!d || d.pointer !== e.pointerId) return;
+    if (rafMove.current !== null) {
+      cancelAnimationFrame(rafMove.current);
+      rafMove.current = null;
+    }
+    const finalX = pendingMove.current?.id === d.id ? pendingMove.current.x : d.fromX + (e.clientX - d.startX) / (layout?.scale ?? 1);
+    const finalY = pendingMove.current?.id === d.id ? pendingMove.current.y : d.fromY + (e.clientY - d.startY) / (layout?.scale ?? 1);
+    pendingMove.current = null;
     drag.current = null;
     setDraggingId(null);
     if (lost || won) return;
@@ -292,7 +342,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
       if (p.id !== d.id) return p;
       const homeX = p.col * PIECE_W;
       const homeY = p.row * PIECE_H;
-      return Math.abs(p.x - homeX) < SNAP && Math.abs(p.y - homeY) < SNAP ? { ...p, x: homeX, y: homeY, placed: true } : p;
+      return Math.abs(finalX - homeX) < SNAP && Math.abs(finalY - homeY) < SNAP ? { ...p, x: homeX, y: homeY, placed: true } : { ...p, x: finalX, y: finalY };
     });
     setPieces(next);
     // the last piece is in: stop the clock
@@ -344,18 +394,18 @@ export default function JigsawPuzzle({ onExit }: Props) {
       </div>
 
       {/* title and stats */}
-      <div className="absolute inset-x-0 top-4 z-20 flex flex-col items-center gap-1 px-4 pl-40 sm:pl-4">
+      <div className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1 px-14 sm:px-16">
         <h2
-          className="font-creepster text-2xl sm:text-3xl uppercase tracking-wider"
+          className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider"
           style={{ color: ACCENT, textShadow: "0 0 24px rgba(254, 215, 120, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
         >
           Piece Casper Back Together
         </h2>
-        <div className="flex items-center gap-4 text-sm font-bold text-white/85">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm font-bold text-white/85">
           <span
-            className={`flex items - center gap - 1.5 transition - colors ${
-  timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
-} `}
+            className={`flex items-center gap-1.5 transition-colors ${
+              timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
+            }`}
           >
             <Timer className="h-4 w-4" style={{ color: timeLeftMs <= 10000 && startedAt !== null ? "#ff5c7a" : ACCENT }} />
             {formatCountdown(timeLeftMs)}
@@ -363,7 +413,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
           <span>
             {placedCount}/{pieces.length} pieces
           </span>
-          <span className={`transition - colors ${ movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : "" } `}>
+          <span className={`transition-colors ${movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : ""}`}>
             {movesLeft} moves left
           </span>
         </div>
@@ -438,6 +488,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
                       : dragging
                         ? "drop-shadow(0 14px 18px rgba(0,0,0,0.6))"
                         : "drop-shadow(0 4px 6px rgba(0,0,0,0.5))",
+                    willChange: dragging ? "left, top" : undefined,
                     transition: p.placed ? "left 0.15s ease-out, top 0.15s ease-out" : undefined,
                   }}
                   viewBox={`${p.col * PIECE_W - MARGIN} ${p.row * PIECE_H - MARGIN} ${PIECE_W + MARGIN * 2} ${PIECE_H + MARGIN * 2}`}
@@ -473,12 +524,12 @@ export default function JigsawPuzzle({ onExit }: Props) {
       )}
 
       {/* peek and restart */}
-      <div className="absolute inset-x-0 bottom-5 z-20 flex justify-center gap-3">
+      <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center gap-3 px-4">
         <button
           type="button"
           onClick={() => setPeek((v) => !v)}
           disabled={won || lost}
-          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 disabled:opacity-40 cursor-pointer"
+          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 disabled:opacity-40 cursor-pointer"
         >
           {peek ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           {peek ? "Hide picture" : "Peek"}
@@ -486,7 +537,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
         <button
           type="button"
           onClick={restart}
-          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
+          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
         >
           <RotateCcw className="h-4 w-4" />
           Shuffle
@@ -498,27 +549,27 @@ export default function JigsawPuzzle({ onExit }: Props) {
         {won && (
           <motion.div
             key="won-modal"
-            className="absolute inset-0 z-30 flex items-end justify-center bg-linear-to-t from-black/80 via-black/20 to-transparent p-6 pb-10"
+            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.35 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(254,215,120,0.35)]"
+              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(254,215,120,0.35)]"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.35 }}
             >
               {/* Casper, free again */}
               <motion.div
-                className="relative mx-auto -mt-20 h-32 w-32 filter drop-shadow-[0_0_24px_rgba(254,215,120,0.7)]"
+                className="relative mx-auto -mt-20 h-28 w-28 sm:h-32 sm:w-32 filter drop-shadow-[0_0_24px_rgba(254,215,120,0.7)]"
                 animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain" />
               </motion.div>
-              <h3 className="font-creepster mt-1 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+              <h3 className="font-creepster mt-1 text-3xl sm:text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
                 Casper Is Free!
               </h3>
               <p className="mt-2 text-sm text-[#d7cced]">
@@ -529,8 +580,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="w-full rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
+                  className="w-full rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
                   Play again
                 </button>
@@ -549,26 +600,26 @@ export default function JigsawPuzzle({ onExit }: Props) {
         {lost && (
           <motion.div
             key="lost-modal"
-            className="absolute inset-0 z-30 flex items-end justify-center bg-linear-to-t from-black/80 via-black/20 to-transparent p-6 pb-10"
+            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.2 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(255,92,122,0.35)]"
+              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(255,92,122,0.35)]"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.2 }}
             >
               <motion.div
-                className="relative mx-auto -mt-20 h-32 w-32 filter drop-shadow-[0_0_24px_rgba(255,92,122,0.7)]"
+                className="relative mx-auto -mt-20 h-28 w-28 sm:h-32 sm:w-32 filter drop-shadow-[0_0_24px_rgba(255,92,122,0.7)]"
                 animate={reducedMotion ? undefined : { y: [0, -6, 0], rotate: [-2, 2, -2] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain opacity-75 grayscale-25" />
               </motion.div>
-              <h3 className="font-creepster mt-1 text-4xl uppercase tracking-wider text-[#ff5c7a]">
+              <h3 className="font-creepster mt-1 text-3xl sm:text-4xl uppercase tracking-wider text-[#ff5c7a]">
                 {lostReason === "time" ? "Time's Up!" : "Out of Moves!"}
               </h3>
               <p className="mt-2 text-sm text-[#d7cced]">
@@ -582,8 +633,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
                   <RotateCcw className="h-4 w-4" />
                   Try again
