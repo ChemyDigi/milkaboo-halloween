@@ -172,7 +172,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
   const [locked, setLocked] = useState<boolean[]>(() => Array(CUPS).fill(false));
   const [wrong, setWrong] = useState<number[]>([]);
   const [tray, setTray] = useState<number[]>([]);
-  const [activeSlot, setActiveSlot] = useState(0);
   const [lives, setLives] = useState(LIVES);
   const [tries, setTries] = useState(0);
   const [memLeft, setMemLeft] = useState(MEMORIZE_SECONDS);
@@ -212,7 +211,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
     setLocked(Array(CUPS).fill(false));
     setWrong([]);
     setTray([]);
-    setActiveSlot(0);
     setLives(LIVES);
     setTries(0);
     setMemLeft(MEMORIZE_SECONDS);
@@ -229,7 +227,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       while (sameOrder(scrambled, target)) scrambled = shuffle(ids());
       setSlots(Array(CUPS).fill(null));
       setTray(scrambled);
-      setActiveSlot(0);
     }, SNATCH_AT_MS);
     later(() => {
       play("laugh");
@@ -244,35 +241,26 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
     return () => clearTimeout(t);
   }, [phase, memLeft, haunt]);
 
-  const nextEmpty = (list: (number | null)[], from: number) => {
-    for (let k = 0; k < CUPS; k++) {
-      const i = (from + k) % CUPS;
-      if (list[i] === null) return i;
-    }
-    return -1;
-  };
-
   const placeCup = (cup: number) => {
     if (phase !== "arrange" || wrong.length) return;
-    const at = slots[activeSlot] === null ? activeSlot : nextEmpty(slots, activeSlot);
+    // Always fill the next empty spot in strict order (1 to 8)
+    const at = slots.findIndex((c) => c === null);
     if (at < 0) return;
     const next = slots.map((c, i) => (i === at ? cup : c));
     setSlots(next);
     setTray((t) => t.filter((c) => c !== cup));
-    setActiveSlot(Math.max(0, nextEmpty(next, at)));
     play("shloop");
   };
 
   const tapSlot = (i: number) => {
     if (phase !== "arrange" || wrong.length || locked[i]) return;
     const cup = slots[i];
-    if (cup === null) {
-      setActiveSlot(i);
-      return;
-    }
-    setSlots((s) => s.map((c, k) => (k === i ? null : c)));
-    setTray((t) => [...t, cup]);
-    setActiveSlot(i);
+    if (cup === null) return;
+    // Return cups from spot i onward to the tray to maintain order
+    const toReturn = slots.slice(i).filter((c): c is number => c !== null);
+    setSlots((s) => s.map((c, k) => (k >= i ? null : c)));
+    setTray((t) => [...t, ...toReturn]);
+    play("shloop");
   };
 
   const checkOrder = () => {
@@ -304,7 +292,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       setTray((t) => [...t, ...shuffle(misses.map((i) => slots[i]!))]);
       const next = slots.map((c, i) => (right[i] ? c : null));
       setSlots(next);
-      setActiveSlot(Math.max(0, nextEmpty(next, 0)));
     }, 1100);
   };
 
@@ -403,15 +390,16 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                 const sink = w * 0.08;
                 const isWrong = wrong.includes(i);
                 const isLocked = locked[i] && (arranging || phase === "won");
-                const isActive = arranging && !wrong.length && cup === null && i === activeSlot;
+                const isPlaced = cup !== null;
+                const canUndo = arranging && !wrong.length && isPlaced && !isLocked;
                 return (
                   <button
                     key={i}
                     type="button"
                     onClick={() => tapSlot(i)}
-                    disabled={!arranging || isLocked}
-                    aria-label={cup === null ? `Empty spot ${i + 1}` : `Spot ${i + 1}: ${FLAVOURS[flavourOf(cup)].name}`}
-                    className="absolute flex flex-col justify-end enabled:cursor-pointer"
+                    disabled={!canUndo}
+                    aria-label={cup === null ? `Spot ${i + 1} (empty)` : `Spot ${i + 1}: ${FLAVOURS[flavourOf(cup)].name}`}
+                    className="absolute flex flex-col justify-end enabled:cursor-pointer disabled:cursor-default"
                     style={{ left: base.x - w / 2, top: base.y - h, width: w, height: h + sink, zIndex: 5 + Math.floor(i / 4) }}
                   >
                     {/* coaster: the cup's base stands in the middle of it */}
@@ -425,21 +413,15 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                           ? "#ff3b5c"
                           : isLocked
                             ? "#4ade80"
-                            : isActive
-                              ? ACCENT
-                              : "rgba(255,255,255,0.18)",
+                            : "rgba(255,255,255,0.18)",
                         background: isWrong
                           ? "rgba(255,59,92,0.3)"
                           : isLocked
                             ? "rgba(74,222,128,0.22)"
-                            : isActive
-                              ? "rgba(192,132,252,0.22)"
-                              : "rgba(0,0,0,0.4)",
-                        boxShadow: isActive
-                          ? `0 0 18px ${ACCENT}`
-                          : isLocked
-                            ? "0 0 14px rgba(74,222,128,0.5)"
-                            : "0 4px 10px rgba(0,0,0,0.5)",
+                            : "rgba(0,0,0,0.4)",
+                        boxShadow: isLocked
+                          ? "0 0 14px rgba(74,222,128,0.5)"
+                          : "0 4px 10px rgba(0,0,0,0.5)",
                       }}
                     />
 
@@ -483,16 +465,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                     >
                       {i + 1}
                     </span>
-                    {isActive && (
-                      <motion.span
-                        className="absolute left-1/2 -translate-x-1/2 font-black leading-none"
-                        style={{ color: ACCENT, fontSize: w * 0.6, top: h - w * 0.75 }}
-                        animate={{ y: [0, -5, 0], opacity: [0.5, 1, 0.5] }}
-                        transition={{ duration: 1.2, repeat: Infinity }}
-                      >
-                        +
-                      </motion.span>
-                    )}
 
                     {cup !== null && (
                       <motion.div
@@ -600,7 +572,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
           {showTray && (
             <div className="rounded-2xl border border-white/10 bg-black/55 px-3 pb-2 pt-1.5 backdrop-blur-md">
               <p className="mb-1 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d1b8eb]/80">
-                {arranging ? "Tap a cup to put it back on the table" : "…"}
+                {arranging ? "Tap cups in order (1 to 8) to restore the table" : "…"}
               </p>
               <div className="grid min-h-12 grid-cols-8 gap-1 sm:gap-2">
                 {tray.map((cup, i) => (
@@ -673,12 +645,12 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                 Mind the Cups!
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-[#e6d8f5]">
-                Eight MilkaBoo cups sit on the castle table. Memorise their order. Then the Horned Beast swoops in
+                Eight MilkaBoo cups sit on the castle table. Memorise their order row by row. Then the Horned Beast swoops in
                 and snatches them all!
               </p>
               <p className="mt-2 text-sm leading-relaxed text-[#e6d8f5]">
-                Put every cup back in the <span className="font-black" style={{ color: ACCENT }}>exact same order</span>. You have{" "}
-                <span className="font-black" style={{ color: ACCENT }}>{LIVES} tries</span>.
+                Put every cup back in the <span className="font-black" style={{ color: ACCENT }}>exact order (1 to 8)</span>. You have{" "}
+                <span className="font-black" style={{ color: ACCENT }}>{LIVES} try</span>.
               </p>
               <div className="mt-4 flex justify-center gap-3">
                 {FLAVOURS.map((f, i) => (
