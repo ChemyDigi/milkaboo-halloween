@@ -344,18 +344,18 @@ export default function JigsawPuzzle({ onExit }: Props) {
       </div>
 
       {/* title and stats */}
-      <div className="absolute inset-x-0 top-4 z-20 flex flex-col items-center gap-1 px-4 pl-40 sm:pl-4">
+      <div className="absolute inset-x-0 top-3 sm:top-4 z-20 flex flex-col items-center gap-1 px-12 sm:px-4">
         <h2
-          className="font-creepster text-2xl sm:text-3xl uppercase tracking-wider"
+          className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider"
           style={{ color: ACCENT, textShadow: "0 0 24px rgba(254, 215, 120, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
         >
           Piece Casper Back Together
         </h2>
-        <div className="flex items-center gap-4 text-sm font-bold text-white/85">
+        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm font-bold text-white/85">
           <span
-            className={`flex items - center gap - 1.5 transition - colors ${
-  timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
-} `}
+            className={`flex items-center gap-1.5 transition-colors ${
+              timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
+            }`}
           >
             <Timer className="h-4 w-4" style={{ color: timeLeftMs <= 10000 && startedAt !== null ? "#ff5c7a" : ACCENT }} />
             {formatCountdown(timeLeftMs)}
@@ -363,7 +363,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
           <span>
             {placedCount}/{pieces.length} pieces
           </span>
-          <span className={`transition - colors ${ movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : "" } `}>
+          <span className={`transition-colors ${movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : ""}`}>
             {movesLeft} moves left
           </span>
         </div>
@@ -529,8 +529,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="w-full rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
+                  className="w-full rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
                   Play again
                 </button>
@@ -582,8 +582,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)" }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
                   <RotateCcw className="h-4 w-4" />
                   Try again

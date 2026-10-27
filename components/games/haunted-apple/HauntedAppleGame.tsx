@@ -1499,8 +1499,13 @@ export default function HauntedAppleGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider text-[#10240a] shadow-[0_0_25px_rgba(163,255,132,0.55)] transition-transform hover:scale-103 active:scale-95"
-                style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)` }}
+                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95"
+                style={{
+                  background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
+                  color: "#0c1f07",
+                  boxShadow: "0 0 24px rgba(163,255,132,0.45)",
+                  textShadow: "none",
+                }}
               >
                 Start Game
               </button>
@@ -1599,8 +1604,13 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black text-[#10240a] transition-transform hover:scale-103 active:scale-95"
-                  style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)` }}
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 active:scale-95"
+                  style={{
+                    background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
+                    color: "#0c1f07",
+                    boxShadow: "0 0 24px rgba(163,255,132,0.45)",
+                    textShadow: "none",
+                  }}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {outcome === "won" ? "Play again" : "Try again"}

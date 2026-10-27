@@ -337,14 +337,14 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <MuteButton muted={muted} onToggle={toggleMute} />
 
       {/* title and stats */}
-      <div className="pointer-events-none absolute inset-x-0 top-4 z-20 flex flex-col items-center gap-1 px-4 pl-40 sm:pl-4">
+      <div className="pointer-events-none absolute inset-x-0 top-3 sm:top-4 z-20 flex flex-col items-center gap-1 px-12 sm:px-4">
         <h2
-          className="font-creepster text-center text-2xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:text-3xl"
+          className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
           style={{ color: ACCENT }}
         >
           The Beast&apos;s Cup Shuffle
         </h2>
-        <div className="flex h-6 items-center gap-4 text-sm font-bold text-white/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+        <div className="flex h-auto flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm font-bold text-white/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
           {phase === "memorize" && (
             <span className="flex items-center gap-1.5">
               <Eye className="h-4 w-4" style={{ color: ACCENT }} />
@@ -668,13 +668,13 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <AnimatePresence>
         {phase === "intro" && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center bg-black/70 p-6 backdrop-blur-sm"
+            className="absolute inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/70 px-4 pb-6 pt-24 backdrop-blur-sm sm:items-center sm:pt-20"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(192,132,252,0.35)]"
+              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center shadow-[0_0_60px_rgba(192,132,252,0.35)]"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
@@ -707,8 +707,8 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-6 w-full rounded-full py-3.5 font-black uppercase tracking-wider text-[#1d0d33] shadow-[0_0_25px_rgba(192,132,252,0.6)] transition-transform hover:scale-103 active:scale-95 cursor-pointer"
-                style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)` }}
+                className="mt-6 w-full rounded-full py-3.5 font-black uppercase tracking-wider shadow-[0_0_24px_rgba(192,132,252,0.5)] transition-transform hover:scale-103 active:scale-95 cursor-pointer"
+                style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)`, color: "#1d0d33", textShadow: "none" }}
               >
                 Show me the cups
               </button>
@@ -760,8 +760,8 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black text-[#241a33] transition-transform hover:scale-103 cursor-pointer"
-                  style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)` }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)`, color: "#1d0d33", textShadow: "none" }}
                 >
                   <RotateCcw className="h-4 w-4" />
                   {phase === "won" ? "Play again" : "Try again"}
