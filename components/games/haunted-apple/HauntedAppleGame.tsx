@@ -326,7 +326,7 @@ function GhostArt({ rage = false, dir = 1, size }: { rage?: boolean; dir?: 1 | -
     <div
       className="relative aspect-square"
       style={{
-        filter: rage ? `drop-shadow(0 0 30px ${SLIME}) saturate(1.35) brightness(1.1)` : "drop-shadow(0 0 18px rgba(139,255,60,0.55))",
+        filter: rage ? `drop-shadow(0 0 30px ${SLIME}) saturate(1.35) brightness(1.1)` : undefined,
         transform: `scaleX(${dir})`,
         transition: "filter 300ms ease, transform 260ms ease-in-out",
       }}
@@ -501,7 +501,7 @@ function DropArt({ kind }: { kind: DropKind }) {
         className="relative block size-full rounded-full"
         style={{
           background: "radial-gradient(circle at 35% 30%, #8a6450 0%, #3a2418 45%, #120a06 100%)",
-          boxShadow: "0 0 10px rgba(163,255,132,0.35), inset -2px -3px 5px rgba(0,0,0,0.5)",
+          boxShadow: "inset -2px -3px 5px rgba(0,0,0,0.5)",
         }}
       >
         <span className="absolute left-[22%] top-[16%] h-[18%] w-[26%] rounded-full bg-white/55" />
@@ -510,7 +510,7 @@ function DropArt({ kind }: { kind: DropKind }) {
   }
   if (kind === "apple") {
     return (
-      <svg viewBox="0 0 40 40" className="size-full overflow-visible drop-shadow-[0_0_10px_rgba(255,210,63,0.85)]" aria-hidden>
+      <svg viewBox="0 0 40 40" className="size-full overflow-visible" aria-hidden>
         <defs>
           <radialGradient id={`${uid}-a`} cx="0.35" cy="0.3" r="0.75">
             <stop offset="0" stopColor="#fff6c2" />
@@ -535,7 +535,6 @@ function DropArt({ kind }: { kind: DropKind }) {
         className="relative block size-full rounded-full"
         style={{
           background: "radial-gradient(circle at 40% 35%, #ffffff 0%, #ead9ff 25%, #a855f7 65%, #4c1d95 100%)",
-          boxShadow: `0 0 14px ${CURSE}, 0 0 28px rgba(192,132,252,0.45)`,
           opacity: 0.92,
         }}
       >
@@ -552,7 +551,7 @@ function DropArt({ kind }: { kind: DropKind }) {
       style={{
         borderRadius: "50% 50% 45% 45% / 35% 35% 65% 65%",
         background: "radial-gradient(circle at 40% 30%, #eaffb0 0%, #8bff3c 40%, #2f9e12 100%)",
-        boxShadow: `0 0 16px ${SLIME}, 0 0 4px #fff inset`,
+        boxShadow: "inset 0 0 4px #fff",
       }}
     >
       <span className="absolute left-[24%] top-[38%] h-[16%] w-[18%] -rotate-12 rounded-full bg-[#0b2a05]" />
@@ -1450,7 +1449,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 px-5 pb-5 pt-14 text-center shadow-[0_0_60px_rgba(163,255,132,0.3)]"
+              className="relative w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 px-5 pb-5 pt-14 text-center shadow-2xl"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
@@ -1499,11 +1498,10 @@ export default function HauntedAppleGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95"
+                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
                 style={{
                   background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
                   color: "#0c1f07",
-                  boxShadow: "0 0 24px rgba(163,255,132,0.45)",
                   textShadow: "none",
                 }}
               >
@@ -1526,8 +1524,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             transition={{ delay: 0.3 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 p-5 text-center"
-              style={{ boxShadow: `0 0 60px ${phase === "won" ? "rgba(163,255,132,0.4)" : "rgba(255,59,92,0.3)"}` }}
+              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#0f1f0c]/95 p-5 text-center shadow-2xl"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.3 }}
@@ -1538,7 +1535,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                     animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
                     transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1 }}
                   >
-                    <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT, filter: `drop-shadow(0 0 14px ${ACCENT})` }} />
+                    <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT }} />
                   </motion.div>
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
                     Cup Filled!
@@ -1550,7 +1547,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 </>
               ) : outcome === "time" ? (
                 <>
-                  <Hourglass className="mx-auto h-11 w-11" style={{ color: DANGER, filter: `drop-shadow(0 0 12px ${DANGER})` }} />
+                  <Hourglass className="mx-auto h-11 w-11" style={{ color: DANGER }} />
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
                     Time&apos;s Up!
                   </h3>
@@ -1561,7 +1558,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 </>
               ) : (
                 <>
-                  <Skull className="mx-auto h-11 w-11" style={{ color: SLIME, filter: `drop-shadow(0 0 12px ${SLIME})` }} />
+                  <Skull className="mx-auto h-11 w-11" style={{ color: SLIME }} />
                   <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
                     Slimed!
                   </h3>
@@ -1604,11 +1601,10 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 active:scale-95"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
                   style={{
                     background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
                     color: "#0c1f07",
-                    boxShadow: "0 0 24px rgba(163,255,132,0.45)",
                     textShadow: "none",
                   }}
                 >
