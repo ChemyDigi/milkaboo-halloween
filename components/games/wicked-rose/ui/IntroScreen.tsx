@@ -12,7 +12,7 @@ export default function IntroScreen({ busy = false, onStart }: Props) {
   return (
     <div className="game__safe justify-between pb-6 sm:pb-8">
       <motion.header
-        className="flex flex-col items-center text-center px-4"
+        className="flex flex-col items-center text-center px-12 sm:px-16"
         initial={{ opacity: 0, y: -16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}

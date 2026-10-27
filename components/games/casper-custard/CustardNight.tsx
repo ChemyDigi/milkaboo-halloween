@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Suspense, memo, useEffect, useMemo, useRef } from "react";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Sparkles, useTexture } from "@react-three/drei";
 import * as THREE from "three";
@@ -51,12 +51,12 @@ interface Glow {
  * piece that snaps in makes the moon flare; the night warms as the picture comes together, and the win
  * bathes it all in gold.
  */
-export default function CustardNight(props: NightProps) {
+function CustardNightComponent(props: NightProps) {
   const { tier } = props;
   return (
     <Canvas
       className="pointer-events-none"
-      dpr={tier === "high" ? [1, 1.75] : tier === "mid" ? [1, 1.5] : 1}
+      dpr={tier === "high" ? [1, 1.5] : tier === "mid" ? [1, 1.25] : 1}
       gl={{ antialias: false, powerPreference: "high-performance", alpha: false, stencil: false, depth: true }}
       camera={{ fov: 40, position: [0, 0, 8], near: 0.1, far: 60 }}
       // the canvas itself must let every pointer event through to the puzzle (its wrapper's class alone doesn't)
@@ -69,6 +69,9 @@ export default function CustardNight(props: NightProps) {
     </Canvas>
   );
 }
+
+const CustardNight = memo(CustardNightComponent);
+export default CustardNight;
 
 function Night({ progress, snaps, won, tier, reducedMotion }: NightProps) {
   const glow = useMemo<Glow>(

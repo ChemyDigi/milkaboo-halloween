@@ -30,7 +30,7 @@ export default function HUD({ hud, reducedMotion }: { hud: HudSnapshot; reducedM
       {hud.gripping && <div className="game__danger" />}
 
       <motion.div
-        className="flex items-start gap-3 pr-14"
+        className="flex items-start gap-3 pl-12 sm:pl-14 pr-12 sm:pr-14"
         animate={hud.gripping && !reducedMotion ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
         transition={{ duration: 0.35, repeat: hud.gripping && !reducedMotion ? Infinity : 0 }}
       >

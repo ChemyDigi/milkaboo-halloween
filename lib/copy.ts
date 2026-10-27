@@ -3,13 +3,13 @@ export const BRAND = "Milkaboo";
 
 export const copy = {
   title: "Free the Rose Cup",
-  tagline: "A ghost has wrapped itself around your bubble tea. Suck it off before time runs out and free the cup!",
+  tagline: "A ghost has wrapped itself around your bubble tea. Sip to peel it off before time runs out and free the cup!",
   start: "Start Game",
   hygiene: "Keep the phone a finger's width from your mouth. No licking the ghost.",
 
   permission: {
     title: "Let the ghost hear you",
-    body: "We use your microphone to hear how hard you're sucking. Nothing is recorded or sent anywhere.",
+    body: "We use your microphone to detect how hard you're sipping. Nothing is recorded or sent anywhere.",
     allow: "Allow microphone",
     asking: "Waiting for your browser…",
     denied: {
@@ -42,15 +42,15 @@ export const copy = {
   calibrating: {
     title: "Shhh… the ghost is listening",
     body: "Stay quiet for a moment",
-    go: "Suck!",
+    go: "Sip!",
   },
 
   hud: {
     freed: "Cup freed",
     status: {
-      idle: "Suck now!",
-      sucking: "Keep sucking!",
-      gripping: "It's holding on! Harder!",
+      idle: "Sip now!",
+      sucking: "Keep sipping!",
+      gripping: "It's holding on! Sip harder!",
       draining: "Don't stop, it's wrapping back!",
       almost: "Almost! Just the logo left!",
     },

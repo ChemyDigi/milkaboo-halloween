@@ -183,7 +183,7 @@ function Lights({ visual }: { visual: Visual }) {
 function Effects({ tier }: { tier: DeviceTier }) {
   if (tier === "low") return null;
   return (
-    <EffectComposer multisampling={tier === "high" ? 4 : 0} enableNormalPass={false}>
+    <EffectComposer multisampling={tier === "high" ? 2 : 0} enableNormalPass={false}>
       <Bloom mipmapBlur luminanceThreshold={0.85} luminanceSmoothing={0.2} intensity={tier === "high" ? 1.1 : 0.8} radius={0.7} />
       {/* film grain and a heavy vignette for the horror-movie look */}
       <Noise premultiply blendFunction={BlendFunction.SCREEN} opacity={0.12} />
@@ -204,7 +204,7 @@ export default function Scene({ state, tier: initialTier, reducedMotion }: Scene
 
   return (
     <Canvas
-      dpr={tier === "high" ? [1, 2] : tier === "mid" ? [1, 1.5] : 1}
+      dpr={tier === "high" ? [1, 1.5] : tier === "mid" ? [1, 1.25] : 1}
       gl={{ antialias: tier === "low", powerPreference: "high-performance", alpha: false, stencil: false }}
       camera={{ fov: 35, position: [0, 0.6, 9], near: 0.1, far: 120 }}
       onCreated={({ gl }) => {

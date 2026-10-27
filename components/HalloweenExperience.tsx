@@ -328,7 +328,7 @@ function SpookyFlavorBackdrop() {
         {BATS.map((bat, i) => (
           <motion.div
             key={i}
-            className="absolute"
+            className="absolute will-change-transform"
             style={{ top: bat.top, left: 0 }}
             initial={{ x: bat.reverse ? "105vw" : "-10vw" }}
             animate={{
@@ -344,7 +344,7 @@ function SpookyFlavorBackdrop() {
               width={bat.size}
               height={bat.size / 2}
               viewBox="0 0 64 32"
-              className={`opacity-60 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)] ${bat.reverse ? "-scale-x-100" : ""}`}
+              className={`opacity-60 drop-shadow-[0_0_8px_rgba(192,132,252,0.5)] will-change-transform ${bat.reverse ? "-scale-x-100" : ""}`}
               animate={{ scaleY: [1, 0.35, 1] }}
               transition={{ duration: 0.35, repeat: Infinity, ease: "easeInOut" }}
             >
@@ -456,12 +456,17 @@ export default function HalloweenExperience() {
       {/* Background soundtrack, quiet while a game (with its own sounds and mic) is open */}
       <SpookyAmbience paused={activeGame !== null} />
 
-      {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
-        <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
-        <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
-      </div>
+      {/* Main page content (hidden when a game is active so background animations and heavy filters do not consume GPU/CPU) */}
+      <div
+        style={{ display: activeGame !== null ? "none" : undefined }}
+        aria-hidden={activeGame !== null}
+      >
+        {/* Spooky Animated Fog & Ethereal Glowing Orbs */}
+        <div className="pointer-events-none fixed inset-0 z-0">
+          <div className="absolute -top-40 -left-40 h-[650px] w-[650px] rounded-full bg-purple-900/20 blur-[150px] animate-pulse" />
+          <div className="absolute top-1/2 -right-40 h-[700px] w-[700px] rounded-full bg-fuchsia-900/20 blur-[180px]" />
+          <div className="absolute bottom-10 left-1/4 h-[500px] w-[500px] rounded-full bg-indigo-950/30 blur-[140px]" />
+        </div>
 
       {/* ========================================================================= */}
       {/* HERO SECTION: Full-width haunted mansion background with floating cup   */}
@@ -693,7 +698,7 @@ export default function HalloweenExperience() {
             {FLAVORS.map((flavor, index) => (
               <motion.div
                 key={flavor.id}
-                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 backdrop-blur-md cursor-pointer transition-all duration-300`}
+                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 backdrop-blur-md cursor-pointer transition-all duration-300 mx-auto w-full max-w-sm sm:max-w-none`}
                 style={{
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.02)",
                 }}
@@ -796,6 +801,7 @@ export default function HalloweenExperience() {
           </div>
         </section>
       </div>
+      </div>
 
       {/* ========================================================================= */}
       {/* FLAVOUR DETAILS MODAL: a WANTED poster for the ghost that took the cup   */}
@@ -824,7 +830,7 @@ export default function HalloweenExperience() {
                 role="dialog"
                 aria-modal="true"
                 aria-label={`Wanted: ${selectedFlavor.ghostTitle}`}
-                className="relative w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[380px]"
+                className="relative w-full max-w-[340px] xs:max-w-[360px] sm:max-w-[390px] md:max-w-[410px]"
                 style={{
                   transformOrigin: "center center",
                   filter: `drop-shadow(0 30px 40px rgba(0,0,0,0.85)) drop-shadow(0 0 28px ${selectedFlavor.glowColor})`,
@@ -850,14 +856,14 @@ export default function HalloweenExperience() {
                     <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-[#bfb0d9]/70">
                       Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
                     </p>
-                    <h3 className="font-bherisi mt-1 text-[46px] sm:text-[58px] md:text-[64px] leading-none tracking-[0.08em] sm:tracking-[0.1em]">WANTED</h3>
+                    <h3 className="font-bherisi mt-1 text-[44px] sm:text-[54px] md:text-[60px] leading-none tracking-[0.08em] sm:tracking-[0.1em]">WANTED</h3>
                     <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em]">
                       For the haunting of a Milkaboo cup
                     </p>
                   </div>
 
                   {/* the mugshot: a photo glued on, the ghost drifting up out of it */}
-                  <div className="relative mx-auto mt-5 sm:mt-12 w-[52%] sm:w-[62%] rotate-[1.5deg]">
+                  <div className="relative mx-auto mt-4 sm:mt-6 w-[52%] sm:w-[56%] max-w-[230px] rotate-[1.5deg]">
                     <div className="relative aspect-4/5 overflow-hidden border-[5px] sm:border-[6px] border-[#efe8f7] bg-[#1a0f24] shadow-[0_12px_28px_rgba(0,0,0,0.6)]">
                       {selectedFlavor.posterImage ? (
                         <div className={`absolute inset-x-0 bottom-0 ${selectedFlavor.ghostImage ? "h-[125%]" : "top-0"}`}>

@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, LayoutGroup, motion, type TargetAndTransition } from "framer-motion";
-import { Check, Eye, Heart, RotateCcw, Trophy, Undo2 } from "lucide-react";
+import { Check, Eye, Heart, RotateCcw, Trophy } from "lucide-react";
 import { useSounds } from "@/hooks/useSounds";
 import MuteButton from "@/components/MuteButton";
 
@@ -51,7 +51,7 @@ const SPOTS = [
 ];
 
 const MEMORIZE_SECONDS = 10;
-const LIVES = 3;
+const LIVES = 1;
 /** how long the ghost hangs over the table; the cups vanish part-way through, while it covers them */
 const HAUNT_MS = 2600;
 const SNATCH_AT_MS = 900;
@@ -135,10 +135,10 @@ function ghostPose(phase: Phase, scene: Scene, size: number): TargetAndTransitio
   const cx = scene.left + TABLE.cx * scene.iw;
   const cy = scene.top + TABLE.cy * scene.ih;
   const perchX =
-    scene.w < 640
-      ? Math.max(size / 2 + 8, cx - scene.iw * TABLE.width * 0.42) - cx
-      : Math.min(scene.w - size / 2 - 8, cx + scene.iw * TABLE.width * 0.42) - cx;
-  const perchY = Math.max(size / 2 + 56, scene.top + TABLE.top * scene.ih - size * 0.45) - cy;
+    scene.w < 840
+      ? Math.max(size / 2 + 16, cx - scene.iw * TABLE.width * 0.42) - cx
+      : Math.min(scene.w - size / 2 - 84, cx + scene.iw * TABLE.width * 0.42) - cx;
+  const perchY = Math.max(size / 2 + 64, scene.top + TABLE.top * scene.ih - size * 0.45) - cy;
   switch (phase) {
     case "intro":
       return { x: perchX + size, y: perchY - size, scale: 0.3, rotate: 20, opacity: 0 };
@@ -275,14 +275,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
     setActiveSlot(i);
   };
 
-  const clearTable = () => {
-    if (phase !== "arrange" || wrong.length) return;
-    setTray((t) => [...t, ...slots.filter((c, i): c is number => c !== null && !locked[i])]);
-    const next = slots.map((c, i) => (locked[i] ? c : null));
-    setSlots(next);
-    setActiveSlot(Math.max(0, nextEmpty(next, 0)));
-  };
-
   const checkOrder = () => {
     if (phase !== "arrange" || slots.some((c) => c === null) || wrong.length) return;
     const right = slots.map((c, i) => flavourOf(c!) === flavourOf(target[i]));
@@ -337,7 +329,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <MuteButton muted={muted} onToggle={toggleMute} />
 
       {/* title and stats */}
-      <div className="pointer-events-none absolute inset-x-0 top-3 sm:top-4 z-20 flex flex-col items-center gap-1 px-12 sm:px-4">
+      <div className="pointer-events-none absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1 px-14 sm:px-16">
         <h2
           className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
           style={{ color: ACCENT }}
@@ -354,7 +346,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
           {phase === "haunt" && <span className="text-[#e9b8ff]">The Beast is snatching the cups…</span>}
           {(arranging || phase === "won" || phase === "lost") && (
             <>
-              <span className="flex items-center gap-1" aria-label={`${lives} tries left`}>
+              <span className="flex items-center gap-1" aria-label={`${lives} chance left`}>
                 {Array.from({ length: LIVES }, (_, i) => (
                   <Heart
                     key={i}
@@ -506,7 +498,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                       <motion.div
                         key={`slot-cup-${round}-${cup}`}
                         layoutId={arranging ? `cup-${cup}` : undefined}
-                        className="relative z-10 w-full"
+                        className="relative z-10 w-full will-change-transform"
                         initial={phase === "memorize" ? { y: -30, opacity: 0, scale: 0.6 } : false}
                         animate={isWrong ? { x: [0, -7, 7, -5, 5, 0], y: 0, opacity: 1, scale: 1 } : { x: 0, y: 0, opacity: 1, scale: 1 }}
                         transition={
@@ -552,7 +544,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
 
               {/* the Horned Beast */}
               <motion.div
-                className="pointer-events-none absolute z-30"
+                className="pointer-events-none absolute z-30 will-change-transform"
                 style={{ left: tableCentre.x - ghostSize / 2, top: tableCentre.y - ghostSize / 2, width: ghostSize, height: ghostSize }}
                 initial={ghostPose("intro", scene, ghostSize)}
                 animate={ghostPose(phase, scene, ghostSize)}
@@ -582,7 +574,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
         </div>
 
         {/* under the table: the memorising timer, or the tray of snatched cups */}
-        <div className="absolute inset-x-0 bottom-0 z-20 mx-auto w-full max-w-xl px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+        <div className="absolute inset-x-0 bottom-0 z-20 mx-auto w-full max-w-xl sm:max-w-2xl px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]">
           {phase === "memorize" && (
             <div className="flex flex-col items-center gap-3">
               <div className="h-2 w-full max-w-sm overflow-hidden rounded-full bg-black/50 ring-1 ring-white/10">
@@ -598,7 +590,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={haunt}
-                className="rounded-full border border-white/20 bg-black/60 px-6 py-2.5 text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
+                className="rounded-full border border-white/20 bg-black/60 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
               >
                 I&apos;ve got it — bring on the Beast!
               </button>
@@ -607,10 +599,10 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
 
           {showTray && (
             <div className="rounded-2xl border border-white/10 bg-black/55 px-3 pb-2 pt-1.5 backdrop-blur-md">
-              <p className="mb-1 text-center text-[10px] font-bold uppercase tracking-widest text-[#d1b8eb]/80">
+              <p className="mb-1 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d1b8eb]/80">
                 {arranging ? "Tap a cup to put it back on the table" : "…"}
               </p>
-              <div className="grid min-h-12 grid-cols-8 gap-1.5">
+              <div className="grid min-h-12 grid-cols-8 gap-1 sm:gap-2">
                 {tray.map((cup, i) => (
                   <motion.button
                     key={cup}
@@ -619,7 +611,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                     onClick={() => placeCup(cup)}
                     disabled={!arranging || wrong.length > 0}
                     aria-label={`Place ${FLAVOURS[flavourOf(cup)].name}`}
-                    className="mx-auto w-full max-w-10 rounded-lg px-0.5 pb-0.5 pt-1.5 transition-colors enabled:cursor-pointer enabled:hover:bg-[rgba(255,255,255,0.1)]"
+                    className="mx-auto w-full max-w-10 sm:max-w-12 md:max-w-14 rounded-lg px-0.5 pb-0.5 pt-1.5 transition-colors enabled:cursor-pointer enabled:hover:bg-[rgba(255,255,255,0.1)] will-change-transform"
                     initial={phase === "haunt" ? { scale: 0, opacity: 0, y: -20 } : false}
                     animate={{ scale: 1, opacity: 1, y: 0 }}
                     whileTap={{ scale: 0.9 }}
@@ -638,26 +630,17 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
 
         </div>
 
-        {/* clear and check: top right, under the sound button, so they never cover the table */}
+        {/* check: top right, under the sound button, so they never cover the table */}
         {arranging && (
-          <div className="absolute right-[max(1rem,env(safe-area-inset-right))] top-22 z-30 flex flex-col items-end gap-2 sm:top-18">
-            <button
-              type="button"
-              onClick={clearTable}
-              disabled={wrong.length > 0 || slots.every((c, i) => c === null || locked[i])}
-              className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-5 py-2.5 text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 disabled:opacity-40 cursor-pointer disabled:cursor-default"
-            >
-              <Undo2 className="h-4 w-4" />
-              Clear
-            </button>
+          <div className="absolute right-[max(0.75rem,env(safe-area-inset-right))] top-16 z-30 flex flex-col items-end gap-2 sm:top-18">
             <button
               type="button"
               onClick={checkOrder}
               disabled={filled < CUPS || wrong.length > 0}
-              className="flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-black text-[#1d0d33] shadow-[0_0_25px_rgba(192,132,252,0.5)] transition-all hover:scale-103 disabled:opacity-40 disabled:shadow-none disabled:hover:scale-100 cursor-pointer disabled:cursor-default"
+              className="flex items-center gap-1.5 sm:gap-2 rounded-full px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-black text-[#1d0d33] shadow-[0_0_25px_rgba(192,132,252,0.5)] transition-all hover:scale-103 disabled:opacity-40 disabled:shadow-none disabled:hover:scale-100 cursor-pointer disabled:cursor-default"
               style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)` }}
             >
-              <Check className="h-4 w-4" strokeWidth={3} />
+              <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={3} />
               Check order
             </button>
           </div>
@@ -668,19 +651,19 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <AnimatePresence>
         {phase === "intro" && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-start justify-center overflow-y-auto bg-black/70 px-4 pb-6 pt-24 backdrop-blur-sm sm:items-center sm:pt-20"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center shadow-[0_0_60px_rgba(192,132,252,0.35)]"
+              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center shadow-[0_0_60px_rgba(192,132,252,0.35)]"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
             >
               <motion.div
-                className="relative mx-auto -mt-20 size-40"
+                className="relative mx-auto -mt-16 sm:-mt-20 size-32 sm:size-40"
                 animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -721,14 +704,14 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <AnimatePresence>
         {(phase === "won" || phase === "lost") && (
           <motion.div
-            className="absolute inset-x-0 bottom-0 z-40 flex justify-center bg-linear-to-t from-black/85 via-black/40 to-transparent p-4 pb-8 pt-16"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.6 }}
           >
             <motion.div
-              className="w-full max-w-sm rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 text-center"
+              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center"
               style={{ boxShadow: `0 0 60px ${phase === "won" ? "rgba(192,132,252,0.4)" : "rgba(255,59,92,0.3)"}` }}
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
