@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 
 export async function POST(request: Request) {
   try {
@@ -22,7 +20,7 @@ export async function POST(request: Request) {
       timestamp: timestamp || new Date().toISOString(),
     };
 
-    // 1. Send to Google Apps Script Web App if configured
+    // Send directly to Google Apps Script Web App
     const scriptUrl = process.env.GOOGLE_SCRIPT_URL || process.env.NEXT_PUBLIC_GOOGLE_SCRIPT_URL;
     let sentToGoogle = false;
 
@@ -34,7 +32,6 @@ export async function POST(request: Request) {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(leadData),
-          // Google Apps Script redirect handling
           redirect: "follow",
         });
 
@@ -46,28 +43,8 @@ export async function POST(request: Request) {
       } catch (err) {
         console.error("Failed to forward lead to Google Apps Script:", err);
       }
-    }
-
-    // 2. Local fallback storage to ensure no leads are ever lost
-    try {
-      const dataDir = path.join(process.cwd(), "data");
-      if (!fs.existsSync(dataDir)) {
-        fs.mkdirSync(dataDir, { recursive: true });
-      }
-      const leadsFile = path.join(dataDir, "leads.json");
-      let existingLeads = [];
-      if (fs.existsSync(leadsFile)) {
-        const fileContent = fs.readFileSync(leadsFile, "utf-8");
-        existingLeads = JSON.parse(fileContent || "[]");
-      }
-      existingLeads.push({
-        ...leadData,
-        sentToGoogle,
-        savedAt: new Date().toISOString(),
-      });
-      fs.writeFileSync(leadsFile, JSON.stringify(existingLeads, null, 2), "utf-8");
-    } catch (fsErr) {
-      console.error("Failed to write to local fallback leads file:", fsErr);
+    } else {
+      console.warn("GOOGLE_SCRIPT_URL is not configured in environment variables.");
     }
 
     return NextResponse.json({

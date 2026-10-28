@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
 import { Gamepad2, X, RotateCcw } from "lucide-react";
@@ -434,28 +434,67 @@ function SpookyFlavorBackdrop() {
   );
 }
 
+// Safe SSR-compatible subscription to sessionStorage (prevents Next.js hydration mismatch)
+const subscribePlayerStorage = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  window.addEventListener("milkaboo_player_changed", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("milkaboo_player_changed", callback);
+  };
+};
+
+const getPlayerSnapshot = () => {
+  try {
+    return sessionStorage.getItem("milkaboo_player");
+  } catch {
+    return null;
+  }
+};
+
+const getServerPlayerSnapshot = () => null;
+
+function usePlayerSession() {
+  const raw = useSyncExternalStore(
+    subscribePlayerStorage,
+    getPlayerSnapshot,
+    getServerPlayerSnapshot
+  );
+
+  const player = useMemo(() => {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as { email: string; mobile: string };
+    } catch {
+      return null;
+    }
+  }, [raw]);
+
+  const setPlayer = useCallback((data: { email: string; mobile: string } | null) => {
+    try {
+      if (data) {
+        sessionStorage.setItem("milkaboo_player", JSON.stringify(data));
+      } else {
+        sessionStorage.removeItem("milkaboo_player");
+      }
+      window.dispatchEvent(new Event("milkaboo_player_changed"));
+    } catch (e) {
+      console.error("Failed to update sessionStorage:", e);
+    }
+  }, []);
+
+  return [player, setPlayer] as const;
+}
+
 export default function HalloweenExperience() {
   const [activeGame, setActiveGame] = useState<GameKind | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<FlavorCard | null>(null);
   const [pendingFlavor, setPendingFlavor] = useState<FlavorCard | null>(null);
   const [showLeadModal, setShowLeadModal] = useState(false);
-  const [currentPlayer, setCurrentPlayer] = useState<{ email: string; mobile: string } | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const stored = sessionStorage.getItem("milkaboo_player");
-      return stored ? JSON.parse(stored) : null;
-    } catch {
-      return null;
-    }
-  });
+  const [currentPlayer, setCurrentPlayer] = usePlayerSession();
 
   const resetPlayer = () => {
     setCurrentPlayer(null);
-    try {
-      sessionStorage.removeItem("milkaboo_player");
-    } catch (e) {
-      console.error("Failed to remove player from sessionStorage:", e);
-    }
   };
 
   return (
@@ -827,7 +866,7 @@ export default function HalloweenExperience() {
       <footer className="relative z-10 w-full px-4 sm:px-6 lg:px-8 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-8">
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-[#bfb0d9]/70 text-center sm:text-left">
           <p>© 2026 Milkaboo (Pvt) Ltd. All rights reserved.</p>
-          <p className="pr-12 sm:pr-14 md:pr-0">
+          <p className="pr-12 sm:pr-14 md:pr-0" suppressHydrationWarning>
             {currentPlayer && (
               <span className="mr-3 inline-flex items-center gap-1.5 text-[11px] text-[#ff7cbe]">
                 <span>Player: {currentPlayer.mobile}</span>
@@ -1050,11 +1089,6 @@ export default function HalloweenExperience() {
         }}
         onSubmitSuccess={(data) => {
           setCurrentPlayer(data);
-          try {
-            sessionStorage.setItem("milkaboo_player", JSON.stringify(data));
-          } catch (e) {
-            console.error("Failed to save player to sessionStorage:", e);
-          }
           setShowLeadModal(false);
           if (pendingFlavor) {
             setActiveGame(pendingFlavor.game);
