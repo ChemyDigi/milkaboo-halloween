@@ -490,11 +490,11 @@ export default function HalloweenExperience() {
         </div>
 
       {/* ========================================================================= */}
-      {/* HERO SECTION: Full-width haunted mansion background with floating cup   */}
+      {/* HERO SECTION: Full-width haunted factory background with floating cup   */}
       {/* (NO navigation bar on top, exactly matching the screenshot)               */}
       {/* ========================================================================= */}
       <section className="relative w-full min-h-[640px] sm:min-h-[720px] lg:min-h-[820px] xl:min-h-[880px] flex items-center justify-center overflow-hidden">
-        {/* Full-width Haunted Mansion Background Image (masked so it dissolves into the page) */}
+        {/* Full-width haunted Milkaboo factory background image (masked so it dissolves into the page) */}
         <div
           className="absolute inset-0 z-0"
           style={{
@@ -503,8 +503,8 @@ export default function HalloweenExperience() {
           }}
         >
           <Image
-            src="/images/hero_mansion_bg.png"
-            alt="Neon Ghosts at the Haunted Mansion"
+            src="/images/WEB.png"
+            alt="The Milkaboo factory under a full moon, beside a haunted graveyard"
             fill
             priority
             sizes="100vw"

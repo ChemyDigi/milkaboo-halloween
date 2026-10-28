@@ -140,8 +140,9 @@ export const gameConfig = {
   sound: {
     /** keep the in-game sounds quiet: the mic runs without echo cancellation and would hear them */
     ambient: 0.35,
-    slurp: 0.25,
-    sfx: 0.7,
+    sfx: 0.6,
+    /** a ghost's laugh once the game is lost, louder than while you're only losing */
+    sfxLoud: 1,
   },
 } as const;
 
