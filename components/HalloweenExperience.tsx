@@ -3,12 +3,13 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Gamepad2, X, Award } from "lucide-react";
+import { Gamepad2, X, RotateCcw } from "lucide-react";
 import WickedRoseGame from "@/components/games/wicked-rose/WickedRoseGame";
 import CasperCustardGame from "@/components/games/casper-custard/CasperCustardGame";
 import HauntedAppleGame from "@/components/games/haunted-apple/HauntedAppleGame";
 import BlackcurrantBeastGame from "@/components/games/blackcurrant-beast/BlackcurrantBeastGame";
 import SpookyAmbience from "@/components/SpookyAmbience";
+import PlayerLeadModal from "@/components/PlayerLeadModal";
 
 /** which game a flavour's ghost challenges you to */
 type GameKind = "rose" | "custard" | "apple" | "beast";
@@ -436,6 +437,26 @@ function SpookyFlavorBackdrop() {
 export default function HalloweenExperience() {
   const [activeGame, setActiveGame] = useState<GameKind | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<FlavorCard | null>(null);
+  const [pendingFlavor, setPendingFlavor] = useState<FlavorCard | null>(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = useState<{ email: string; mobile: string } | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = sessionStorage.getItem("milkaboo_player");
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+
+  const resetPlayer = () => {
+    setCurrentPlayer(null);
+    try {
+      sessionStorage.removeItem("milkaboo_player");
+    } catch (e) {
+      console.error("Failed to remove player from sessionStorage:", e);
+    }
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-[#0d0618] text-[#f6f0ff] selection:bg-[#ff7cbe] selection:text-[#241a33] overflow-x-hidden font-sans">
@@ -801,6 +822,36 @@ export default function HalloweenExperience() {
           </div>
         </section>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full px-4 sm:px-6 lg:px-8 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-8">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-[#bfb0d9]/70 text-center sm:text-left">
+          <p>© 2026 Milkaboo (Pvt) Ltd. All rights reserved.</p>
+          <p className="pr-12 sm:pr-14 md:pr-0">
+            {currentPlayer && (
+              <span className="mr-3 inline-flex items-center gap-1.5 text-[11px] text-[#ff7cbe]">
+                <span>Player: {currentPlayer.mobile}</span>
+                <button
+                  type="button"
+                  onClick={resetPlayer}
+                  className="underline hover:text-white cursor-pointer"
+                >
+                  (Switch Player)
+                </button>
+              </span>
+            )}
+            Designed and Developed by{" "}
+            <a
+              href="https://www.alchemy.lk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-poppins font-semibold text-[#f6f0ff] no-underline transition-colors hover:text-[#ff7cbe]"
+            >
+              alchemy
+            </a>
+          </p>
+        </div>
+      </footer>
       </div>
 
       {/* ========================================================================= */}
@@ -937,8 +988,14 @@ export default function HalloweenExperience() {
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedFlavor(null);
-                      setActiveGame(selectedFlavor.game);
+                      if (currentPlayer) {
+                        setSelectedFlavor(null);
+                        setActiveGame(selectedFlavor.game);
+                      } else {
+                        setPendingFlavor(selectedFlavor);
+                        setSelectedFlavor(null);
+                        setShowLeadModal(true);
+                      }
                     }}
                     className="group relative mt-5 sm:mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
                     style={{
@@ -978,6 +1035,55 @@ export default function HalloweenExperience() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* PLAYER LEAD REGISTRATION MODAL: Shown once before a player's first game */}
+      {/* ========================================================================= */}
+      <PlayerLeadModal
+        isOpen={showLeadModal}
+        flavorTitle={pendingFlavor?.fullName}
+        themeColor={pendingFlavor?.themeColor}
+        glowColor={pendingFlavor?.glowColor}
+        onClose={() => {
+          setShowLeadModal(false);
+          setPendingFlavor(null);
+        }}
+        onSubmitSuccess={(data) => {
+          setCurrentPlayer(data);
+          try {
+            sessionStorage.setItem("milkaboo_player", JSON.stringify(data));
+          } catch (e) {
+            console.error("Failed to save player to sessionStorage:", e);
+          }
+          setShowLeadModal(false);
+          if (pendingFlavor) {
+            setActiveGame(pendingFlavor.game);
+            setPendingFlavor(null);
+          }
+        }}
+      />
+
+      {/* In-store staff control: Active player pill & New Player reset button */}
+      {currentPlayer && activeGame === null && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-40 flex items-center gap-2 rounded-full border border-white/20 bg-[#140b24]/90 px-3 py-1.5 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+        >
+          <span className="text-[11px] font-medium text-[#d6c7ff] max-w-[130px] truncate">
+            👤 {currentPlayer.mobile}
+          </span>
+          <button
+            type="button"
+            onClick={resetPlayer}
+            title="Reset for next player in line"
+            className="flex items-center gap-1 rounded-full bg-[#ff7cbe]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#ff7cbe] hover:bg-[#ff7cbe] hover:text-[#0e0717] transition-all cursor-pointer"
+          >
+            <RotateCcw className="h-2.5 w-2.5" />
+            <span>New Player</span>
+          </button>
+        </motion.div>
+      )}
 
       {/* ========================================================================= */}
       {/* FULLSCREEN GAME OVERLAY MODAL: the flavour's game */}
