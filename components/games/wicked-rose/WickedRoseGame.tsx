@@ -8,7 +8,7 @@ import type { RoundEvent, RoundState } from "@/lib/gameEngine";
 import { useBreathDetector } from "@/hooks/useBreathDetector";
 import { useDebugFlag, useDeviceTier, useReducedMotion } from "@/hooks/useDeviceTier";
 import { useGameLoop } from "@/hooks/useGameLoop";
-import { useSounds } from "@/hooks/useSounds";
+import { useSounds, type SfxName } from "@/hooks/useSounds";
 import { EXIT_SECONDS, createSceneState, setSceneMode, type SceneMode } from "./three/sceneState";
 import CalibratingScreen from "./ui/CalibratingScreen";
 import DebugPanel from "./ui/DebugPanel";
@@ -24,6 +24,9 @@ const Scene = dynamic(() => import("./three/Scene"), { ssr: false });
 
 type Screen = "intro" | "permission" | "calibrating" | "playing" | "won" | "lost";
 
+/** besides the music, only her laugh: when she fights back, and louder when the round is lost */
+const SOUNDS: readonly SfxName[] = ["femaleLaugh"];
+
 /**
  * "Free the Milkaboo Cup": Pure client-side game flow connecting mic, 60fps loop, 3D scene and sound design.
  * intro → (permission) → calibrating → playing → won | lost
@@ -33,7 +36,7 @@ export default function Game() {
   const tier = useDeviceTier();
   const reducedMotion = useReducedMotion();
   const mic = useBreathDetector();
-  const sounds = useSounds();
+  const sounds = useSounds(SOUNDS);
   const sceneState = useRef(createSceneState());
 
   const [screen, setScreen] = useState<Screen>("intro");
@@ -61,33 +64,28 @@ export default function Game() {
 
   const endRound = useCallback(() => {
     mic.stop();
-    sounds.setSuction(0);
     const s = sceneState.current;
     s.suck = 0;
     s.grip = false;
-  }, [mic, sounds]);
+  }, [mic]);
 
   const onRoundEvent = useCallback(
     (event: RoundEvent, round: RoundState) => {
       if (event === "gripStart") {
-        sounds.play("wail");
+        // she fights back, laughing
+        sounds.play("femaleLaugh");
         if ("vibrate" in navigator) navigator.vibrate(gameConfig.fightBack.vibratePattern);
       } else if (event === "won") {
         endRound();
-        sounds.play("shloop");
         show("won", "exiting");
-        timers.current.push(
-          setTimeout(() => {
-            setSceneMode(sceneState.current, "won");
-            sounds.play("win");
-            sounds.setAmbience(0.4);
-          }, EXIT_SECONDS * 1000),
-        );
+        timers.current.push(setTimeout(() => setSceneMode(sceneState.current, "won"), EXIT_SECONDS * 1000));
       } else if (event === "lost") {
         endRound();
         setPeak(round.peak);
         sceneState.current.progress = 0; // the ghost wraps the whole cup again
-        sounds.play("laugh");
+        // the music drops back and she laughs louder than ever
+        sounds.setAmbience(0.35);
+        sounds.play("femaleLaugh", true);
         show("lost", "lost");
       }
     },
@@ -95,11 +93,6 @@ export default function Game() {
   );
 
   const loop = useGameLoop(mic.readingRef, sceneState, onRoundEvent);
-
-  // Sound slurp follows suction
-  useEffect(() => {
-    sounds.setSuction(screen === "playing" && loop.hud.sucking ? 1 : 0);
-  }, [screen, loop.hud.sucking, sounds]);
 
   /** Starts the round: initializes AudioContext and mic on user gesture */
   const beginRound = async () => {
