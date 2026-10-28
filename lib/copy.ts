@@ -5,7 +5,7 @@ export const copy = {
   title: "Free the Rose Cup",
   tagline: "A ghost has wrapped itself around your bubble tea. Sip to peel it off before time runs out and free the cup!",
   start: "Start Game",
-  hygiene: "Keep the phone a finger's width from your mouth. No licking the ghost.",
+  hygiene: "Hold your device close to your mouth and sip into the microphone to play.",
 
   permission: {
     title: "Let the ghost hear you",
@@ -14,7 +14,7 @@ export const copy = {
     asking: "Waiting for your browser…",
     denied: {
       title: "The mic is blocked",
-      body: "No mic, no ghostbusting. Turn it back on, then reload this page:",
+      body: "Microphone access is required to play. Turn it back on, then reload this page:",
       ios: "iPhone/iPad Safari: tap ᴀA in the address bar → Website Settings → Microphone → Allow.",
       android: "Android Chrome: tap the lock (or ⋮ icon) next to the address → Permissions → Microphone → Allow.",
       desktop: "On a computer: click the icon left of the address bar and allow the microphone.",

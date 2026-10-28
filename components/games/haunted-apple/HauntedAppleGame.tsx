@@ -1182,32 +1182,32 @@ export default function HauntedAppleGame({ onClose }: Props) {
       <div className="pointer-events-none absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-2 px-3">
         <div className="flex max-w-full items-center justify-center gap-2.5 px-14 sm:px-16">
           <h2
-            className="ha-flicker font-creepster text-2xl uppercase tracking-wider drop-shadow-[0_2px_14px_rgba(0,0,0,0.9)] sm:text-3xl"
-            style={{ color: ACCENT, textShadow: "0 0 18px rgba(163,255,132,0.45)" }}
+            className="ha-flicker font-creepster text-2xl uppercase tracking-wider drop-shadow-[0_2px_14px_rgba(0,0,0,0.9)] sm:text-3xl md:text-4xl"
+            style={{ color: ACCENT, textShadow: "0 0 18px rgba(163,255,132,0.6)" }}
           >
             Boba Drop
           </h2>
           {playing && view && (
             <span
               key={view.wave}
-              className="hidden rounded-full border border-white/15 bg-black/40 px-2.5 py-0.5 text-[10px] font-black uppercase tracking-[0.2em] text-white/80 backdrop-blur-sm sm:inline-block"
+              className="hidden rounded-full border border-white/15 bg-black/50 px-3 py-1 text-xs font-black uppercase tracking-[0.2em] text-white/90 backdrop-blur-sm sm:inline-block"
             >
               Wave {view.wave + 1} · {WAVES[view.wave].name}
             </span>
           )}
         </div>
-        <div className="flex max-w-full flex-wrap items-center justify-center gap-x-3 gap-y-1 rounded-full border border-white/10 bg-black/45 px-3.5 py-2 text-sm font-bold text-white/90 shadow-[0_8px_30px_rgba(0,0,0,0.45)] backdrop-blur-md sm:gap-x-4 sm:px-4">
-          <span className="flex items-center gap-1" aria-label={`${lives} lives left`}>
+        <div className="flex max-w-full flex-wrap items-center justify-center gap-x-4 gap-y-1.5 rounded-full border border-white/15 bg-black/60 px-4 py-2 text-sm sm:text-base font-bold text-white shadow-[0_8px_30px_rgba(0,0,0,0.55)] backdrop-blur-md sm:gap-x-5 sm:px-5">
+          <span className="flex items-center gap-1.5" aria-label={`${lives} lives left`}>
             {Array.from({ length: LIVES }, (_, i) => (
               <Heart
                 key={i}
-                className="h-4 w-4 transition-all"
+                className="h-4.5 w-4.5 transition-all"
                 style={{ color: ACCENT, fill: i < lives ? ACCENT : "transparent", opacity: i < lives ? 1 : 0.35 }}
               />
             ))}
           </span>
-          <span className="flex items-center gap-1.5" aria-label={`cup ${pct}% full`}>
-            <CupSoda className="h-4 w-4" style={{ color: ACCENT }} />
+          <span className="flex items-center gap-2" aria-label={`cup ${pct}% full`}>
+            <CupSoda className="h-4.5 w-4.5" style={{ color: ACCENT }} />
             <span className="relative h-2.5 w-16 overflow-hidden rounded-full bg-white/15 sm:w-28">
               <span
                 className="block h-full rounded-full transition-[width] duration-300"
@@ -1217,18 +1217,18 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 <span key={w.at} className="absolute top-0 h-full w-px bg-black/60" style={{ left: `${w.at * 100}%` }} />
               ))}
             </span>
-            <span className="w-8 text-right tabular-nums sm:w-9">{pct}%</span>
+            <span className="w-9 text-right tabular-nums font-black">{pct}%</span>
           </span>
           <span
-            className={`flex items-center gap-1 tabular-nums ${urgent ? "animate-pulse" : ""}`}
+            className={`flex items-center gap-1 tabular-nums font-black ${urgent ? "animate-pulse" : ""}`}
             style={{ color: urgent ? DANGER : undefined }}
             aria-label={`${Math.ceil(timeLeft)} seconds left`}
           >
-            <Timer className="h-4 w-4" />
+            <Timer className="h-4.5 w-4.5" />
             {clockText(timeLeft)}
           </span>
-          <span className="flex items-center gap-1 tabular-nums" aria-label={`score ${view?.score ?? 0}`}>
-            <Zap className="h-4 w-4" style={{ color: GOLD }} />
+          <span className="flex items-center gap-1 tabular-nums font-black" aria-label={`score ${view?.score ?? 0}`}>
+            <Zap className="h-4.5 w-4.5" style={{ color: GOLD }} />
             {(view?.score ?? 0).toLocaleString()}
           </span>
         </div>
@@ -1484,48 +1484,51 @@ export default function HauntedAppleGame({ onClose }: Props) {
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="relative w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#0f1f0c]/95 px-5 pb-5 pt-12 sm:pt-14 text-center shadow-2xl"
+              className="relative w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#0c1a0a]/98 px-6 pb-6 pt-14 sm:pt-16 text-center shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
             >
               <motion.div
-                className="pointer-events-none absolute -top-24 left-1/2 w-36 -translate-x-1/2"
+                className="pointer-events-none absolute -top-24 left-1/2 w-40 sm:w-44 -translate-x-1/2"
                 aria-hidden
                 animate={{ y: [0, -6, 0] }}
                 transition={{ duration: 2.4, repeat: Infinity, ease: "easeInOut" }}
               >
-                <GhostArt size="144px" />
+                <GhostArt size="160px" />
               </motion.div>
-              <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#a9c99a]">The Spooky Phantom&apos;s</p>
-              <h3 className="font-creepster mt-0.5 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+              <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-[#bde3ad]">The Spooky Phantom&apos;s</p>
+              <h3
+                className="font-creepster mt-1 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider"
+                style={{ color: ACCENT, textShadow: "0 0 25px rgba(163,255,132,0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
+              >
                 Boba Drop
               </h3>
-              <p className="mt-2 text-sm leading-relaxed text-[#e2f5d6]">
-                Slide your cup under the rain of boba. Catch <span className="font-black text-white">{GOAL} pearls</span> before
+              <p className="mt-3 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                Slide your cup under the rain of boba. Catch <span className="font-black text-[#ffd166]">{GOAL} pearls</span> before
                 the clock runs out. The fuller the cup, the nastier the Phantom gets.
               </p>
-              <ul className="mt-4 grid grid-cols-1 gap-2 text-left text-xs text-[#e2f5d6] min-[360px]:grid-cols-2">
+              <ul className="mt-5 grid grid-cols-1 gap-2.5 text-left text-sm sm:text-base text-[#e2f5d6] min-[360px]:grid-cols-2">
                 <Legend kind="pearl" label="Pearl" value="+1" color={ACCENT} note="fills the cup" />
                 <Legend kind="apple" label="Apple" value={`+${APPLE_VALUE}`} color={GOLD} note="rare and golden" />
                 <Legend kind="slime" label="Slime" value="−♥" color={DANGER} note="hunts your cup" />
                 <Legend kind="curse" label="Phantom" value={`−${CURSE_DRAIN}`} color={CURSE} note="drains the cup" />
               </ul>
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-[11px] font-bold text-[#a9c99a]">
-                <span className="flex items-center gap-1">
-                  <Timer className="h-3.5 w-3.5" style={{ color: ACCENT }} /> {TIME_LIMIT}s on the clock
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs sm:text-sm md:text-base font-bold text-[#bde3ad]">
+                <span className="flex items-center gap-1.5">
+                  <Timer className="h-4 w-4" style={{ color: ACCENT }} /> {TIME_LIMIT}s on the clock
                 </span>
-                <span className="flex items-center gap-1">
-                  <Heart className="h-3.5 w-3.5" style={{ color: ACCENT, fill: ACCENT }} /> {LIVES} hearts
+                <span className="flex items-center gap-1.5">
+                  <Heart className="h-4 w-4" style={{ color: ACCENT, fill: ACCENT }} /> {LIVES} hearts
                 </span>
-                <span className="flex items-center gap-1">
-                  <Flame className="h-3.5 w-3.5" style={{ color: GOLD }} /> streaks up to ×{MAX_MULT}
+                <span className="flex items-center gap-1.5">
+                  <Flame className="h-4 w-4" style={{ color: GOLD }} /> streaks up to ×{MAX_MULT}
                 </span>
               </div>
               {best > 0 && (
-                <p className="mt-2 text-xs text-[#a9c99a]">
+                <p className="mt-2 text-sm text-[#bde3ad]">
                   Best score:{" "}
-                  <span className="font-black tabular-nums" style={{ color: GOLD }}>
+                  <span className="font-black tabular-nums text-white">
                     {best.toLocaleString()}
                   </span>
                 </p>
@@ -1533,7 +1536,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-5 w-full cursor-pointer rounded-full py-3.5 font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
+                className="mt-6 w-full cursor-pointer rounded-full py-4 sm:py-4.5 text-base sm:text-lg md:text-xl font-black uppercase tracking-wider transition-transform hover:scale-103 active:scale-95 shadow-xl shadow-black/50"
                 style={{
                   background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
                   color: "#0c1f07",
@@ -1542,7 +1545,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
               >
                 Start Game
               </button>
-              <p className="mt-2.5 text-[11px] text-[#a9c99a]">Drag anywhere, or use ← → on a keyboard.</p>
+              <p className="mt-3 text-xs sm:text-sm text-[#bde3ad] font-medium">Drag anywhere, or use ← → on a keyboard.</p>
             </motion.div>
           </motion.div>
         )}
@@ -1559,7 +1562,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             transition={{ delay: 0.3 }}
           >
             <motion.div
-              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#0f1f0c]/95 p-5 sm:p-6 text-center shadow-2xl"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#0c1a0a]/98 p-6 sm:p-9 md:p-10 text-center shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.3 }}
@@ -1570,45 +1573,54 @@ export default function HauntedAppleGame({ onClose }: Props) {
                     animate={{ rotate: [0, -8, 8, 0], scale: [1, 1.1, 1] }}
                     transition={{ duration: 1.2, repeat: Infinity, repeatDelay: 1 }}
                   >
-                    <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT }} />
+                    <Trophy className="mx-auto h-14 w-14 sm:h-16 sm:w-16" style={{ color: ACCENT }} />
                   </motion.div>
-                  <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+                  <h3
+                    className="font-creepster mt-3 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider"
+                    style={{ color: ACCENT, textShadow: "0 0 25px rgba(163,255,132,0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
+                  >
                     Cup Filled!
                   </h3>
-                  <p className="mt-2 text-sm text-[#d9ecd0]">
-                    You filled the cup with <span className="font-black text-white">{clockText(view.timeLeft)}</span> to spare and
+                  <p className="mt-3 text-base sm:text-lg md:text-xl text-[#f0fbf0] font-medium leading-relaxed">
+                    You filled the cup with <span className="font-black text-[#ffd166]">{clockText(view.timeLeft)}</span> to spare and
                     kept the slime out. The Haunted Apple cup is free!
                   </p>
                 </>
               ) : outcome === "time" ? (
                 <>
-                  <Hourglass className="mx-auto h-11 w-11" style={{ color: DANGER }} />
-                  <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
+                  <Hourglass className="mx-auto h-13 w-13 sm:h-15 sm:w-15" style={{ color: DANGER }} />
+                  <h3
+                    className="font-creepster mt-3 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider text-[#ff3b5c]"
+                    style={{ textShadow: "0 0 25px rgba(255,59,92,0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
+                  >
                     Time&apos;s Up!
                   </h3>
-                  <p className="mt-2 text-sm text-[#f8d7dc]">
+                  <p className="mt-3 text-base sm:text-lg md:text-xl text-rose-100 font-medium leading-relaxed">
                     The clock ran out with the cup only <span className="font-black text-white">{pct}%</span> full. Chase the
                     golden apples and keep your streak alive!
                   </p>
                 </>
               ) : (
                 <>
-                  <Skull className="mx-auto h-11 w-11" style={{ color: SLIME }} />
-                  <h3 className="font-creepster mt-2 text-4xl uppercase tracking-wider" style={{ color: DANGER }}>
+                  <Skull className="mx-auto h-13 w-13 sm:h-15 sm:w-15" style={{ color: SLIME }} />
+                  <h3
+                    className="font-creepster mt-3 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider text-[#ff3b5c]"
+                    style={{ textShadow: "0 0 25px rgba(255,59,92,0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
+                  >
                     Slimed!
                   </h3>
-                  <p className="mt-2 text-sm text-[#f8d7dc]">
+                  <p className="mt-3 text-base sm:text-lg md:text-xl text-rose-100 font-medium leading-relaxed">
                     The Phantom&apos;s ectoplasm ruined the cup at <span className="font-black text-white">{pct}%</span> full. The
                     slime hunts you, so keep moving!
                   </p>
                 </>
               )}
 
-              <div className="mt-5 grid grid-cols-2 gap-2 text-left">
+              <div className="mt-6 grid grid-cols-2 gap-3 text-left">
                 <Stat label="Score" value={view.score.toLocaleString()} color={GOLD}>
                   {newBest && (
                     <motion.span
-                      className="absolute -top-2 right-2 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-[0.15em] text-[#10240a]"
+                      className="absolute -top-2.5 right-2 rounded-full px-2.5 py-0.5 text-xs font-black uppercase tracking-[0.15em] text-[#10240a]"
                       style={{ background: GOLD }}
                       initial={{ scale: 0, rotate: -12 }}
                       animate={{ scale: 1, rotate: -6 }}
@@ -1627,30 +1639,30 @@ export default function HauntedAppleGame({ onClose }: Props) {
                 )}
               </div>
               {!newBest && best > 0 && (
-                <p className="mt-2 text-[11px] text-[#a9c99a]">
+                <p className="mt-2.5 text-xs sm:text-sm text-[#bde3ad]">
                   Best: <span className="font-black tabular-nums text-white">{best.toLocaleString()}</span>
                 </p>
               )}
 
-              <div className="mt-5 flex flex-col gap-3">
+              <div className="mt-8 flex flex-col gap-3.5">
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 active:scale-95 shadow-lg shadow-black/40"
+                  className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 active:scale-95 shadow-xl shadow-black/50"
                   style={{
                     background: `linear-gradient(135deg, ${ACCENT} 0%, ${GOLD} 100%)`,
                     color: "#0c1f07",
                     textShadow: "none",
                   }}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-5 w-5" />
                   {outcome === "won" ? "Play again" : "Try again"}
                 </button>
                 {onClose && (
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full cursor-pointer py-1 text-sm text-[#9fb894] transition-colors hover:text-white"
+                    className="w-full cursor-pointer py-2 text-base sm:text-lg text-[#b8d4af] transition-colors hover:text-white font-semibold"
                   >
                     Back to the flavours
                   </button>

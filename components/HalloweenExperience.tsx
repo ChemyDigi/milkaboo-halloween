@@ -943,11 +943,11 @@ export default function HalloweenExperience() {
 
                   {/* heading */}
                   <div className="relative text-center">
-                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-[#bfb0d9]/70">
+                    <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-[#d6c7ee]">
                       Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
                     </p>
                     <h3 className="font-bherisi mt-1 text-[44px] sm:text-[54px] md:text-[60px] leading-none tracking-[0.08em] sm:tracking-[0.1em]">WANTED</h3>
-                    <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em]">
+                    <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-xs sm:text-sm font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-white">
                       For the haunting of a Milkaboo cup
                     </p>
                   </div>
@@ -1012,13 +1012,13 @@ export default function HalloweenExperience() {
                     >
                       {selectedFlavor.ghostTitle}
                     </p>
-                    <p className="mt-2 sm:mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#bfb0d9]/70">
+                    <p className="mt-2 sm:mt-3 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-[#d6c7ee]">
                       Last seen possessing the
                     </p>
                     <p className="font-bherisi mt-0.5 text-[22px] sm:text-[26px] uppercase leading-tight tracking-wider">
                       {selectedFlavor.fullName}
                     </p>
-                    <p className="mt-2 sm:mt-2.5 text-xs sm:text-[13px] leading-relaxed text-[#c7bcd8]">
+                    <p className="mt-2 sm:mt-2.5 text-sm sm:text-base leading-relaxed text-[#f3edfc]">
                       {selectedFlavor.desc}
                     </p>
                   </div>
@@ -1045,7 +1045,7 @@ export default function HalloweenExperience() {
                     }}
                   >
                     <span className="flex flex-col items-start text-left min-w-0 flex-1">
-                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.35em] opacity-70">
+                      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] opacity-80">
                         Bring them in · play
                       </span>
                       <span className="font-bherisi text-lg sm:text-xl uppercase leading-tight tracking-wider truncate max-w-full">
