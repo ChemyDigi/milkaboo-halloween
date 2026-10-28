@@ -15,7 +15,7 @@ import {
 import Image from "next/image";
 import { AnimatePresence, motion } from "framer-motion";
 import { CupSoda, Flame, Heart, Hourglass, RotateCcw, Skull, Timer, Trophy, Zap } from "lucide-react";
-import { useSounds, type SoundFiles } from "@/hooks/useSounds";
+import { useSounds, type SfxName } from "@/hooks/useSounds";
 import { useReducedMotion } from "@/hooks/useDeviceTier";
 import MuteButton from "@/components/MuteButton";
 
@@ -34,12 +34,8 @@ const BACKDROP = "/games/haunted-apple/Moonlit Haunted Lake Terrace (1).png";
 const GHOST_SRC = "/games/haunted-apple/Neon Ghost Riding a Mystic Broom.png";
 /** the scare, red-eyed: bats, things watching from the dark, a spider on its thread */
 const EYE = "#ff4d2e";
-/** the game's own music, the Phantom's cackle, and a scream when the cup is lost */
-const SOUNDS: SoundFiles = {
-  ambient: "/sounds/background1.mp3",
-  laugh: "/sounds/Evillaugh.mp3",
-  scream: "/sounds/female.mp3",
-};
+/** a slurp for a catch, a fanfare for a full cup, and the Phantom's evil laugh whenever things go wrong */
+const SOUNDS: readonly SfxName[] = ["shloop", "win", "laugh"];
 
 /* ---------- the rules: tune the difficulty here ---------- */
 /** pearls to fill the cup */
@@ -871,9 +867,10 @@ export default function HauntedAppleGame({ onClose }: Props) {
         setNewBest(true);
       }
       setView(snapshot(s));
-      // the music drops back so the scream (or the fanfare) cuts through
+      // the music drops back so the fanfare, or the Phantom laughing louder than ever, cuts through
       setAmbience(0.35);
-      play(outcome === "won" ? "win" : "scream");
+      if (outcome === "won") play("win");
+      else play("laugh", true);
       setPhase(outcome === "won" ? "won" : "lost");
     };
 
@@ -1000,7 +997,7 @@ export default function HauntedAppleGame({ onClose }: Props) {
             pop(d.x, cupTop - 24, `−${CURSE_DRAIN} cursed`, CURSE, true);
             burst(d.x, cupTop, CURSE, 8);
             taunt("curse");
-            play("wail");
+            play("laugh");
           } else {
             const gain = d.kind === "apple" ? APPLE_VALUE : 1;
             s.streak += 1;

@@ -1,7 +1,14 @@
 import type { Metadata, Viewport } from "next";
-import { Creepster, Lato } from "next/font/google";
+import { Creepster, Lato, Poppins } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
+
+const poppins = Poppins({
+  weight: ["400", "500", "600", "700"],
+  subsets: ["latin"],
+  variable: "--font-poppins",
+  display: "swap",
+});
 
 const creepster = Creepster({
   weight: "400",
@@ -49,7 +56,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${bherisi.variable} ${jamoaScript.variable} ${lato.variable} ${mainstay.variable} ${creepster.variable}`}
+      className={`${bherisi.variable} ${jamoaScript.variable} ${lato.variable} ${mainstay.variable} ${creepster.variable} ${poppins.variable}`}
     >
       <body>{children}</body>
     </html>

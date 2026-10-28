@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { AnimatePresence, LayoutGroup, motion, type TargetAndTransition } from "framer-motion";
 import { Check, Eye, Heart, RotateCcw, Trophy } from "lucide-react";
-import { useSounds } from "@/hooks/useSounds";
+import { useSounds, type SfxName } from "@/hooks/useSounds";
 import MuteButton from "@/components/MuteButton";
 
 interface Props {
@@ -49,6 +49,9 @@ const SPOTS = [
   { x: 0.551, y: 0.762, w: 0.0385 },
   { x: 0.66, y: 0.762, w: 0.0385 },
 ];
+
+/** the Beast's evil laugh and cup placement sound */
+const SOUNDS: readonly SfxName[] = ["laugh", "shloop"];
 
 const MEMORIZE_SECONDS = 10;
 const LIVES = 1;
@@ -163,7 +166,7 @@ function ghostPose(phase: Phase, scene: Scene, size: number): TargetAndTransitio
 }
 
 export default function BlackcurrantBeastGame({ onClose }: Props) {
-  const { muted, toggleMute, unlock, play } = useSounds();
+  const { muted, toggleMute, unlock, play, setAmbience } = useSounds(SOUNDS);
   const [phase, setPhase] = useState<Phase>("intro");
   /** the order to remember: cup id per table slot */
   const [target, setTarget] = useState<number[]>(ids);
@@ -204,6 +207,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
 
   const start = () => {
     unlock();
+    setAmbience(1);
     clearTimers();
     const order = shuffle(ids());
     setTarget(order);
@@ -221,18 +225,14 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
   /** the ghost swoops over the table and snatches every cup into the tray */
   const haunt = useCallback(() => {
     setPhase("haunt");
-    play("wail");
     later(() => {
       let scrambled = shuffle(ids());
       while (sameOrder(scrambled, target)) scrambled = shuffle(ids());
       setSlots(Array(CUPS).fill(null));
       setTray(scrambled);
     }, SNATCH_AT_MS);
-    later(() => {
-      play("laugh");
-      setPhase("arrange");
-    }, HAUNT_MS);
-  }, [later, play, target]);
+    later(() => setPhase("arrange"), HAUNT_MS);
+  }, [later, target]);
 
   // memorising countdown
   useEffect(() => {
@@ -269,7 +269,6 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
     setTries((n) => n + 1);
     setLocked(right);
     if (right.every(Boolean)) {
-      play("win");
       setPhase("won");
       return;
     }
@@ -286,6 +285,9 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
         setSlots(target);
         setTray([]);
         setPhase("lost");
+        // the music drops back and the Beast laughs louder than ever
+        setAmbience(0.35);
+        play("laugh", true);
         return;
       }
       // the wrong cups hop back into the tray for another go

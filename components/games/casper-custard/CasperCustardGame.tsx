@@ -6,6 +6,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { Eye, EyeOff, RotateCcw, Timer } from "lucide-react";
 import { useDeviceTier, useReducedMotion } from "@/hooks/useDeviceTier";
+import { useSounds, type SfxName } from "@/hooks/useSounds";
+import MuteButton from "@/components/MuteButton";
 import Casper, { ARRIVAL_SECONDS, CASPER_SRC } from "./Casper";
 
 /** the animated night behind the puzzle; 3D, so it loads on its own after the puzzle is up */
@@ -176,6 +178,11 @@ function computeLayout(width: number, height: number): Layout {
 const TIME_LIMIT_SECONDS = 35;
 const TIME_LIMIT_MS = TIME_LIMIT_SECONDS * 1000;
 const MAX_MOVES = 50;
+/** this little time or this few moves left, and Casper's ghost starts laughing at you */
+const DANGER_MS = 10000;
+const DANGER_MOVES = 10;
+/** besides the music, only the evil laugh: when you start running out, and louder when the game is lost */
+const SOUNDS: readonly SfxName[] = ["laugh"];
 
 const formatCountdown = (ms: number) => {
   const s = Math.max(0, Math.ceil(ms / 1000));
@@ -255,9 +262,24 @@ export default function JigsawPuzzle({ onExit }: Props) {
   const lost = !won && (isTimeUp || isMovesUp);
   const lostReason = isTimeUp ? "time" : isMovesUp ? "moves" : null;
 
+  const danger = startedAt !== null && !won && !lost && (timeLeftMs <= DANGER_MS || movesLeft <= DANGER_MOVES);
+
   const placedCount = pieces.filter((p) => p.placed).length;
   const tier = useDeviceTier();
   const reducedMotion = useReducedMotion();
+  const { muted, toggleMute, unlock, play, setAmbience } = useSounds(SOUNDS);
+
+  // the music starts with the game: the tap that opened it lets the browser play sound
+  useEffect(() => unlock(), [unlock]);
+  useEffect(() => {
+    if (danger) play("laugh");
+  }, [danger, play]);
+  useEffect(() => {
+    if (!lost) return;
+    // the music drops back and the ghost laughs louder than ever
+    setAmbience(0.35);
+    play("laugh", true);
+  }, [lost, play, setAmbience]);
 
   /** throws every loose piece somewhere in the trays */
   const scatter = useCallback((list: Piece[], l: Layout) => {
@@ -359,6 +381,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
 
   const restart = () => {
     hidePeek();
+    setAmbience(1);
     const fresh = makePieces();
     setPieces(layout ? scatter(fresh, layout) : fresh);
     setOrder(fresh.map((p) => p.id));
@@ -479,6 +502,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
         {/* darker at the top and bottom, so the title and the buttons read */}
         <div className="absolute inset-0 bg-linear-to-t from-[#120a1f]/70 via-transparent to-[#120a1f]/55" />
       </div>
+
+      <MuteButton muted={muted} onToggle={toggleMute} />
 
       {/* title and stats */}
       <div className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1.5 px-14 sm:px-16 pointer-events-none">

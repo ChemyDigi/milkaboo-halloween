@@ -8,6 +8,7 @@
   --font-lato: var(--font-lato);
   --font-mainstay: var(--font-mainstay);
   --font-creepster: var(--font-creepster);
+  --font-poppins: var(--font-poppins);
 }
 
 /* ---------- tokens: colours from the brand ---------- */
@@ -84,3 +85,4 @@ body {
 .font-lato { font-family: var(--font-lato); }
 .font-mainstay { font-family: var(--font-mainstay); }
 .font-creepster { font-family: var(--font-creepster), "Creepster", cursive, sans-serif; letter-spacing: 0.04em; }
+.font-poppins { font-family: var(--font-poppins), sans-serif; }
