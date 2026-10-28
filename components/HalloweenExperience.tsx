@@ -1,14 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useMemo, useCallback, useSyncExternalStore } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, MotionConfig } from "framer-motion";
-import { Gamepad2, X, Award } from "lucide-react";
+import { Gamepad2, X, RotateCcw } from "lucide-react";
 import WickedRoseGame from "@/components/games/wicked-rose/WickedRoseGame";
 import CasperCustardGame from "@/components/games/casper-custard/CasperCustardGame";
 import HauntedAppleGame from "@/components/games/haunted-apple/HauntedAppleGame";
 import BlackcurrantBeastGame from "@/components/games/blackcurrant-beast/BlackcurrantBeastGame";
 import SpookyAmbience from "@/components/SpookyAmbience";
+import PlayerLeadModal from "@/components/PlayerLeadModal";
 
 /** which game a flavour's ghost challenges you to */
 type GameKind = "rose" | "custard" | "apple" | "beast";
@@ -433,9 +434,68 @@ function SpookyFlavorBackdrop() {
   );
 }
 
+// Safe SSR-compatible subscription to sessionStorage (prevents Next.js hydration mismatch)
+const subscribePlayerStorage = (callback: () => void) => {
+  window.addEventListener("storage", callback);
+  window.addEventListener("milkaboo_player_changed", callback);
+  return () => {
+    window.removeEventListener("storage", callback);
+    window.removeEventListener("milkaboo_player_changed", callback);
+  };
+};
+
+const getPlayerSnapshot = () => {
+  try {
+    return sessionStorage.getItem("milkaboo_player");
+  } catch {
+    return null;
+  }
+};
+
+const getServerPlayerSnapshot = () => null;
+
+function usePlayerSession() {
+  const raw = useSyncExternalStore(
+    subscribePlayerStorage,
+    getPlayerSnapshot,
+    getServerPlayerSnapshot
+  );
+
+  const player = useMemo(() => {
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw) as { email: string; mobile: string };
+    } catch {
+      return null;
+    }
+  }, [raw]);
+
+  const setPlayer = useCallback((data: { email: string; mobile: string } | null) => {
+    try {
+      if (data) {
+        sessionStorage.setItem("milkaboo_player", JSON.stringify(data));
+      } else {
+        sessionStorage.removeItem("milkaboo_player");
+      }
+      window.dispatchEvent(new Event("milkaboo_player_changed"));
+    } catch (e) {
+      console.error("Failed to update sessionStorage:", e);
+    }
+  }, []);
+
+  return [player, setPlayer] as const;
+}
+
 export default function HalloweenExperience() {
   const [activeGame, setActiveGame] = useState<GameKind | null>(null);
   const [selectedFlavor, setSelectedFlavor] = useState<FlavorCard | null>(null);
+  const [pendingFlavor, setPendingFlavor] = useState<FlavorCard | null>(null);
+  const [showLeadModal, setShowLeadModal] = useState(false);
+  const [currentPlayer, setCurrentPlayer] = usePlayerSession();
+
+  const resetPlayer = () => {
+    setCurrentPlayer(null);
+  };
 
   return (
     <div className="relative min-h-screen w-full bg-[#0d0618] text-[#f6f0ff] selection:bg-[#ff7cbe] selection:text-[#241a33] overflow-x-hidden font-sans">
@@ -802,6 +862,36 @@ export default function HalloweenExperience() {
           </div>
         </section>
       </div>
+
+      {/* Footer */}
+      <footer className="relative z-10 w-full px-4 sm:px-6 lg:px-8 pt-4 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-8">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm text-[#bfb0d9]/70 text-center sm:text-left">
+          <p>© 2026 Milkaboo (Pvt) Ltd. All rights reserved.</p>
+          <p className="pr-12 sm:pr-14 md:pr-0" suppressHydrationWarning>
+            {currentPlayer && (
+              <span className="mr-3 inline-flex items-center gap-1.5 text-[11px] text-[#ff7cbe]">
+                <span>Player: {currentPlayer.mobile}</span>
+                <button
+                  type="button"
+                  onClick={resetPlayer}
+                  className="underline hover:text-white cursor-pointer"
+                >
+                  (Switch Player)
+                </button>
+              </span>
+            )}
+            Designed and Developed by{" "}
+            <a
+              href="https://www.alchemy.lk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-poppins font-semibold text-[#f6f0ff] no-underline transition-colors hover:text-[#ff7cbe]"
+            >
+              alchemy
+            </a>
+          </p>
+        </div>
+      </footer>
       </div>
 
       {/* ========================================================================= */}
@@ -854,11 +944,11 @@ export default function HalloweenExperience() {
 
                   {/* heading */}
                   <div className="relative text-center">
-                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.4em] text-[#bfb0d9]/70">
+                    <p className="text-xs sm:text-sm font-bold uppercase tracking-[0.25em] text-[#d6c7ee]">
                       Milkaboo · Case Nº {String(FLAVORS.indexOf(selectedFlavor) + 1).padStart(2, "0")}
                     </p>
                     <h3 className="font-bherisi mt-1 text-[44px] sm:text-[54px] md:text-[60px] leading-none tracking-[0.08em] sm:tracking-[0.1em]">WANTED</h3>
-                    <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em]">
+                    <p className="mt-1.5 sm:mt-2 border-y-2 border-white/25 py-1 text-xs sm:text-sm font-bold uppercase tracking-[0.14em] sm:tracking-[0.18em] text-white">
                       For the haunting of a Milkaboo cup
                     </p>
                   </div>
@@ -923,13 +1013,13 @@ export default function HalloweenExperience() {
                     >
                       {selectedFlavor.ghostTitle}
                     </p>
-                    <p className="mt-2 sm:mt-3 text-[9px] sm:text-[10px] font-bold uppercase tracking-[0.25em] sm:tracking-[0.3em] text-[#bfb0d9]/70">
+                    <p className="mt-2 sm:mt-3 text-xs sm:text-sm font-bold uppercase tracking-[0.2em] text-[#d6c7ee]">
                       Last seen possessing the
                     </p>
                     <p className="font-bherisi mt-0.5 text-[22px] sm:text-[26px] uppercase leading-tight tracking-wider">
                       {selectedFlavor.fullName}
                     </p>
-                    <p className="mt-2 sm:mt-2.5 text-xs sm:text-[13px] leading-relaxed text-[#c7bcd8]">
+                    <p className="mt-2 sm:mt-2.5 text-sm sm:text-base leading-relaxed text-[#f3edfc]">
                       {selectedFlavor.desc}
                     </p>
                   </div>
@@ -938,8 +1028,14 @@ export default function HalloweenExperience() {
                   <button
                     type="button"
                     onClick={() => {
-                      setSelectedFlavor(null);
-                      setActiveGame(selectedFlavor.game);
+                      if (currentPlayer) {
+                        setSelectedFlavor(null);
+                        setActiveGame(selectedFlavor.game);
+                      } else {
+                        setPendingFlavor(selectedFlavor);
+                        setSelectedFlavor(null);
+                        setShowLeadModal(true);
+                      }
                     }}
                     className="group relative mt-5 sm:mt-6 flex w-full items-center justify-between gap-3 transition-[transform,filter] duration-150 cursor-pointer select-none hover:brightness-110 active:scale-[0.98]"
                     style={{
@@ -950,7 +1046,7 @@ export default function HalloweenExperience() {
                     }}
                   >
                     <span className="flex flex-col items-start text-left min-w-0 flex-1">
-                      <span className="text-[8px] sm:text-[9px] font-bold uppercase tracking-[0.3em] sm:tracking-[0.35em] opacity-70">
+                      <span className="text-[10px] sm:text-xs font-bold uppercase tracking-[0.25em] opacity-80">
                         Bring them in · play
                       </span>
                       <span className="font-bherisi text-lg sm:text-xl uppercase leading-tight tracking-wider truncate max-w-full">
@@ -979,6 +1075,50 @@ export default function HalloweenExperience() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ========================================================================= */}
+      {/* PLAYER LEAD REGISTRATION MODAL: Shown once before a player's first game */}
+      {/* ========================================================================= */}
+      <PlayerLeadModal
+        isOpen={showLeadModal}
+        flavorTitle={pendingFlavor?.fullName}
+        themeColor={pendingFlavor?.themeColor}
+        glowColor={pendingFlavor?.glowColor}
+        onClose={() => {
+          setShowLeadModal(false);
+          setPendingFlavor(null);
+        }}
+        onSubmitSuccess={(data) => {
+          setCurrentPlayer(data);
+          setShowLeadModal(false);
+          if (pendingFlavor) {
+            setActiveGame(pendingFlavor.game);
+            setPendingFlavor(null);
+          }
+        }}
+      />
+
+      {/* In-store staff control: Active player pill & New Player reset button */}
+      {currentPlayer && activeGame === null && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-40 flex items-center gap-2 rounded-full border border-white/20 bg-[#140b24]/90 px-3 py-1.5 backdrop-blur-md shadow-[0_4px_20px_rgba(0,0,0,0.6)]"
+        >
+          <span className="text-[11px] font-medium text-[#d6c7ff] max-w-[130px] truncate">
+            👤 {currentPlayer.mobile}
+          </span>
+          <button
+            type="button"
+            onClick={resetPlayer}
+            title="Reset for next player in line"
+            className="flex items-center gap-1 rounded-full bg-[#ff7cbe]/20 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-[#ff7cbe] hover:bg-[#ff7cbe] hover:text-[#0e0717] transition-all cursor-pointer"
+          >
+            <RotateCcw className="h-2.5 w-2.5" />
+            <span>New Player</span>
+          </button>
+        </motion.div>
+      )}
 
       {/* ========================================================================= */}
       {/* FULLSCREEN GAME OVERLAY MODAL: the flavour's game */}
