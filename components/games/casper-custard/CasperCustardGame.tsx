@@ -207,7 +207,36 @@ export default function JigsawPuzzle({ onExit }: Props) {
   /** goes up on every shuffle: Casper flies in again and the pieces are tossed out again */
   const [round, setRound] = useState(0);
   const [peek, setPeek] = useState(false);
+  const isPeekingRef = useRef(false);
+  const pointerDownAt = useRef<number>(0);
+  const wasHoldingRef = useRef<boolean>(false);
+  const peekTimeout = useRef<NodeJS.Timeout | null>(null);
+  const peekStartedAt = useRef<number>(0);
+
+  const clearPeekTimer = useCallback(() => {
+    if (peekTimeout.current) {
+      clearTimeout(peekTimeout.current);
+      peekTimeout.current = null;
+    }
+  }, []);
+
+  const hidePeek = useCallback(() => {
+    clearPeekTimer();
+    isPeekingRef.current = false;
+    setPeek(false);
+  }, [clearPeekTimer]);
+
+  const triggerPeek = useCallback((durationMs = 3000) => {
+    clearPeekTimer();
+    isPeekingRef.current = true;
+    peekStartedAt.current = Date.now();
+    setPeek(true);
+    peekTimeout.current = setTimeout(() => {
+      hidePeek();
+    }, durationMs);
+  }, [clearPeekTimer, hidePeek]);
   const [moves, setMoves] = useState(0);
+  const [phase, setPhase] = useState<"intro" | "playing">("intro");
   const [startedAt, setStartedAt] = useState<number | null>(null);
   const [now, setNow] = useState(0);
   const [finishedIn, setFinishedIn] = useState<number | null>(null);
@@ -271,7 +300,65 @@ export default function JigsawPuzzle({ onExit }: Props) {
     }
   }, [lost]);
 
+  // Clean up peek timer on unmount, or when game ends
+  useEffect(() => {
+    if (won || lost) {
+      hidePeek();
+    }
+    return () => {
+      clearPeekTimer();
+    };
+  }, [won, lost, hidePeek, clearPeekTimer]);
+
+  const handlePeekPointerDown = useCallback((e: ReactPointerEvent<HTMLButtonElement>) => {
+    if (won || lost) return;
+    pointerDownAt.current = Date.now();
+    wasHoldingRef.current = false;
+    if (!isPeekingRef.current) {
+      isPeekingRef.current = true;
+      peekStartedAt.current = Date.now();
+      setPeek(true);
+    }
+  }, [won, lost]);
+
+  const handlePeekPointerUp = useCallback(() => {
+    if (won || lost) return;
+    const heldMs = Date.now() - pointerDownAt.current;
+    if (heldMs >= 600) {
+      // Held deliberately: release immediately hides peek
+      wasHoldingRef.current = true;
+      hidePeek();
+    } else {
+      // Short tap/click: auto-hide after 3 seconds
+      clearPeekTimer();
+      peekTimeout.current = setTimeout(() => {
+        hidePeek();
+      }, 3000);
+    }
+  }, [won, lost, hidePeek, clearPeekTimer]);
+
+  const handlePeekPointerCancel = useCallback(() => {
+    if (wasHoldingRef.current || isPeekingRef.current) {
+      hidePeek();
+    }
+  }, [hidePeek]);
+
+  const handlePeekClick = useCallback(() => {
+    if (won || lost) return;
+    if (wasHoldingRef.current) {
+      wasHoldingRef.current = false;
+      return;
+    }
+    if (!isPeekingRef.current) {
+      triggerPeek(3000);
+    } else if (Date.now() - peekStartedAt.current > 300) {
+      // Second click while active: dismiss peek early
+      hidePeek();
+    }
+  }, [won, lost, triggerPeek, hidePeek]);
+
   const restart = () => {
+    hidePeek();
     const fresh = makePieces();
     setPieces(layout ? scatter(fresh, layout) : fresh);
     setOrder(fresh.map((p) => p.id));
@@ -279,14 +366,14 @@ export default function JigsawPuzzle({ onExit }: Props) {
     setStartedAt(null);
     setNow(0);
     setFinishedIn(null);
-    setPeek(false);
     setDraggingId(null);
     drag.current = null;
     setRound((r) => r + 1);
+    setPhase("playing");
   };
 
   const onPointerDown = (e: ReactPointerEvent<SVGGElement>, piece: Piece) => {
-    if (piece.placed || won || lost || drag.current) return;
+    if (phase !== "playing" || piece.placed || won || lost || drag.current) return;
     e.currentTarget.setPointerCapture(e.pointerId);
     drag.current = { id: piece.id, pointer: e.pointerId, startX: e.clientX, startY: e.clientY, fromX: piece.x, fromY: piece.y };
     setDraggingId(piece.id);
@@ -428,7 +515,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
             style={{ left: layout.boardLeft, top: layout.boardTop, width: IMAGE.width * k, height: IMAGE.height * k }}
           >
             <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${IMAGE.width} ${IMAGE.height}`} aria-hidden>
-              <image href={IMAGE.src} width={IMAGE.width} height={IMAGE.height} opacity={peek ? 0.3 : 0} style={{ transition: "opacity 0.3s" }} />
+              <image href={IMAGE.src} width={IMAGE.width} height={IMAGE.height} opacity={peek ? 0.38 : 0} style={{ transition: "opacity 0.25s ease-in-out" }} />
               {pieces.map((p) => (
                 <path key={p.id} d={p.path} fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth={3} strokeDasharray="12 10" />
               ))}
@@ -524,25 +611,137 @@ export default function JigsawPuzzle({ onExit }: Props) {
       )}
 
       {/* peek and restart */}
-      <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center gap-3 sm:gap-4 px-4">
-        <button
-          type="button"
-          onClick={() => setPeek((v) => !v)}
-          disabled={won || lost}
-          className="flex items-center gap-2 rounded-full border border-white/25 bg-black/70 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 disabled:opacity-40 cursor-pointer shadow-lg"
-        >
-          {peek ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
-          {peek ? "Hide picture" : "Peek"}
-        </button>
-        <button
-          type="button"
-          onClick={restart}
-          className="flex items-center gap-2 rounded-full border border-white/25 bg-black/70 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 cursor-pointer shadow-lg"
-        >
-          <RotateCcw className="h-4.5 w-4.5" />
-          Shuffle
-        </button>
-      </div>
+      {phase === "playing" && (
+        <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center gap-3 sm:gap-4 px-4">
+          <button
+            type="button"
+            onPointerDown={handlePeekPointerDown}
+            onPointerUp={handlePeekPointerUp}
+            onPointerCancel={handlePeekPointerCancel}
+            onPointerLeave={handlePeekPointerCancel}
+            onClick={handlePeekClick}
+            disabled={won || lost}
+            className={`flex min-w-[125px] sm:min-w-[140px] items-center justify-center gap-2 rounded-full border px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold backdrop-blur-md transition-all active:scale-95 disabled:opacity-40 cursor-pointer shadow-lg select-none ${
+              peek
+                ? "border-[#fed778] bg-black/90 text-[#fed778]"
+                : "border-white/25 bg-black/70 text-white hover:bg-black/90 hover:scale-103"
+            }`}
+          >
+            <Eye className={`h-4.5 w-4.5 ${peek ? "text-[#fed778]" : "text-white"}`} />
+            {peek ? "Peeking..." : "Peek"}
+          </button>
+          <button
+            type="button"
+            onClick={restart}
+            className="flex items-center gap-2 rounded-full border border-white/25 bg-black/70 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 cursor-pointer shadow-lg"
+          >
+            <RotateCcw className="h-4.5 w-4.5" />
+            Shuffle
+          </button>
+        </div>
+      )}
+
+      {/* how to play intro modal */}
+      <AnimatePresence>
+        {phase === "intro" && (
+          <motion.div
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/80 p-4 py-8 backdrop-blur-md sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="relative w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 px-6 pb-6 pt-16 sm:pt-20 text-center shadow-2xl backdrop-blur-md"
+              initial={{ scale: 0.85, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              transition={{ type: "spring", stiffness: 240, damping: 18 }}
+            >
+              <motion.div
+                className="pointer-events-none absolute -top-24 sm:-top-28 left-1/2 size-36 sm:size-44 md:size-48 -translate-x-1/2 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
+                animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="200px" priority className="object-contain" />
+              </motion.div>
+              <p className="text-xs sm:text-sm font-black uppercase tracking-[0.3em] text-[#fed778]/90">
+                The Friendly Sprite&apos;s
+              </p>
+              <h3
+                className="font-creepster mt-1 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider text-[#fed778]"
+              >
+                Casper&apos;s Jigsaw
+              </h3>
+              <p className="mt-3 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                Casper got spooked and his puzzle pieces scattered across the castle! Drag every piece onto the board to piece him back together before the clock runs out.
+              </p>
+
+              <ul className="mt-5 grid grid-cols-1 gap-2.5 text-left text-sm sm:text-base min-[360px]:grid-cols-2">
+                <li className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5">
+                  <span className="text-2xl">🧩</span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block font-bold text-white">
+                      12 Pieces <span className="font-black text-[#fed778]">to fit</span>
+                    </span>
+                    <span className="block text-xs text-[#fed778]/80">Drag onto board</span>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5">
+                  <span className="text-2xl">⏱️</span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block font-bold text-white">
+                      35 Seconds <span className="font-black text-[#fed778]">clock</span>
+                    </span>
+                    <span className="block text-xs text-[#fed778]/80">Beat the countdown</span>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5">
+                  <span className="text-2xl">🎯</span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block font-bold text-white">
+                      50 Moves <span className="font-black text-[#ff8ab2]">limit</span>
+                    </span>
+                    <span className="block text-xs text-[#ff8ab2]/80">Place each carefully</span>
+                  </span>
+                </li>
+                <li className="flex items-center gap-2.5 rounded-2xl border border-white/10 bg-white/5 px-3.5 py-2.5">
+                  <span className="text-2xl">👁️</span>
+                  <span className="min-w-0 leading-tight">
+                    <span className="block font-bold text-white">
+                      Peek Mode <span className="font-black text-[#4ade80]">guide</span>
+                    </span>
+                    <span className="block text-xs text-[#4ade80]/80">Tap to peek at the picture</span>
+                  </span>
+                </li>
+              </ul>
+
+              <div className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 text-xs sm:text-sm md:text-base font-bold text-[#fed778]">
+                <span className="flex items-center gap-1.5">
+                  <Timer className="h-4 w-4" style={{ color: "#fed778" }} /> 35s on the clock
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-sm">🎯</span> 50 moves max
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="text-sm">🧩</span> 12 puzzle pieces
+                </span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setPhase("playing")}
+                className="mt-6 w-full cursor-pointer rounded-full py-4 sm:py-4.5 text-base sm:text-lg md:text-xl font-black uppercase tracking-wider shadow-lg shadow-black/40 transition-all hover:scale-103 active:scale-95 cursor-pointer"
+                style={{
+                  background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)",
+                  color: "#241a33",
+                }}
+              >
+                Start Puzzle
+              </button>
+              <p className="mt-3 text-xs sm:text-sm text-[#fed778]/80 font-medium">Drag pieces from the trays onto their matching slots.</p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* solved / lost */}
       <AnimatePresence>
@@ -556,22 +755,21 @@ export default function JigsawPuzzle({ onExit }: Props) {
             transition={{ delay: 0.35 }}
           >
             <motion.div
-              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-[0_0_70px_rgba(254,215,120,0.4)] backdrop-blur-md"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.35 }}
             >
               {/* Casper, free again */}
               <motion.div
-                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 filter drop-shadow-[0_0_30px_rgba(254,215,120,0.85)]"
+                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
                 animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
                 <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="200px" className="object-contain" />
               </motion.div>
               <h3
-                className="font-creepster mt-2 text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider"
-                style={{ color: ACCENT, textShadow: "0 0 25px rgba(254,215,120,0.85), 0 2px 10px rgba(0,0,0,0.9)" }}
+                className="font-creepster mt-2 text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider text-[#fed778]"
               >
                 Casper Is Free!
               </h3>
@@ -583,8 +781,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="w-full rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
+                  className="w-full rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg shadow-black/40"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33" }}
                 >
                   Play again
                 </button>
@@ -610,13 +808,13 @@ export default function JigsawPuzzle({ onExit }: Props) {
             transition={{ delay: 0.2 }}
           >
             <motion.div
-              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-[0_0_70px_rgba(255,92,122,0.4)] backdrop-blur-md"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-2xl backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.2 }}
             >
               <motion.div
-                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 filter drop-shadow-[0_0_30px_rgba(255,92,122,0.85)]"
+                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 drop-shadow-[0_10px_20px_rgba(0,0,0,0.6)]"
                 animate={reducedMotion ? undefined : { y: [0, -6, 0], rotate: [-2, 2, -2] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
@@ -624,7 +822,6 @@ export default function JigsawPuzzle({ onExit }: Props) {
               </motion.div>
               <h3
                 className="font-creepster mt-2 text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider text-[#ff5c7a]"
-                style={{ textShadow: "0 0 25px rgba(255,92,122,0.85), 0 2px 10px rgba(0,0,0,0.9)" }}
               >
                 {lostReason === "time" ? "Time's Up!" : "Out of Moves!"}
               </h3>
@@ -639,8 +836,8 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={restart}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg"
-                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg shadow-black/40"
+                  style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33" }}
                 >
                   <RotateCcw className="h-5 w-5" />
                   Try again
