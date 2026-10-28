@@ -689,16 +689,17 @@ export default function HalloweenExperience() {
             </motion.p>
           </div>
 
-          {/* 4 Flavour Cards Grid */}
+          {/* 4 Flavour Cards Grid: stacked on a phone, all four in one row from a small tablet up
+              (the cards, their padding and their titles shrink to fit, then grow back on a laptop) */}
           <div
-            className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 lg:gap-5 xl:gap-7 ${
+            className={`grid grid-cols-1 sm:grid-cols-4 sm:gap-x-3 md:gap-x-4 lg:gap-5 xl:gap-7 ${
               FLAVORS.some((f) => f.ghostImage) ? "gap-y-24 gap-x-6 pt-20" : "gap-6"
             }`}
           >
             {FLAVORS.map((flavor, index) => (
               <motion.div
                 key={flavor.id}
-                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 backdrop-blur-md cursor-pointer transition-all duration-300 mx-auto w-full max-w-sm sm:max-w-none`}
+                className={`group relative flex flex-col ${flavor.ghostImage ? "overflow-visible" : "overflow-hidden"} rounded-3xl border border-white/10 bg-[#140b24]/90 p-4 sm:p-2.5 md:p-3 lg:p-4 backdrop-blur-md cursor-pointer transition-all duration-300 mx-auto w-full max-w-sm sm:max-w-none`}
                 style={{
                   boxShadow: "0 10px 30px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(255, 255, 255, 0.02)",
                 }}
@@ -727,7 +728,7 @@ export default function HalloweenExperience() {
                             src={flavor.posterImage}
                             alt={`${flavor.fullName} Milkaboo Poster`}
                             fill
-                            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
+                            sizes="(max-width: 639px) 90vw, 25vw"
                             className="object-cover object-[center_30%] select-none"
                           />
                         </div>
@@ -756,7 +757,7 @@ export default function HalloweenExperience() {
                             src={flavor.cupImage}
                             alt={`${flavor.fullName} Milkaboo Cup`}
                             fill
-                            sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
+                            sizes="(max-width: 639px) 90vw, 25vw"
                             className="object-contain filter drop-shadow-[0_12px_24px_rgba(0,0,0,0.8)]"
                           />
                         </div>
@@ -771,7 +772,7 @@ export default function HalloweenExperience() {
                         src={flavor.ghostImage}
                         alt=""
                         fill
-                        sizes="(max-width: 640px) 90vw, (max-width: 1024px) 45vw, 25vw"
+                        sizes="(max-width: 639px) 90vw, 25vw"
                         className="object-cover object-[center_30%] select-none"
                         style={{ filter: `drop-shadow(0 -4px 14px ${flavor.glowColor})` }}
                       />
@@ -780,9 +781,9 @@ export default function HalloweenExperience() {
                 </div>
 
                 {/* Card Dripping Typography at Bottom */}
-                <div className="mt-5 mb-2 flex flex-col items-center text-center px-2">
+                <div className="mt-5 mb-2 flex flex-col items-center text-center px-2 sm:mt-3 sm:px-0 lg:mt-5 lg:px-2">
                   <h4
-                    className="font-creepster text-2xl sm:text-3xl font-black uppercase tracking-wider transition-colors duration-300 select-none"
+                    className="font-creepster text-2xl sm:text-lg md:text-xl lg:text-3xl font-black uppercase tracking-wider transition-colors duration-300 select-none"
                     style={{
                       color: flavor.themeColor,
                       lineHeight: 1.15,
@@ -792,7 +793,7 @@ export default function HalloweenExperience() {
                     <div>{flavor.subName}</div>
                   </h4>
 
-                  <span className="mt-2 text-xs font-semibold text-[#b5a3cf]">
+                  <span className="mt-2 text-xs sm:text-[11px] lg:text-xs font-semibold text-[#b5a3cf]">
                     {flavor.ghostTitle}
                   </span>
                 </div>
