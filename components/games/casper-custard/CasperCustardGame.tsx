@@ -394,26 +394,26 @@ export default function JigsawPuzzle({ onExit }: Props) {
       </div>
 
       {/* title and stats */}
-      <div className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1 px-14 sm:px-16">
+      <div className="absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1.5 px-14 sm:px-16 pointer-events-none">
         <h2
-          className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider"
-          style={{ color: ACCENT, textShadow: "0 0 24px rgba(254, 215, 120, 0.6), 0 2px 10px rgba(0,0,0,0.9)" }}
+          className="font-creepster text-center text-2xl sm:text-3xl md:text-4xl uppercase tracking-wider"
+          style={{ color: ACCENT, textShadow: "0 0 24px rgba(254, 215, 120, 0.7), 0 2px 10px rgba(0,0,0,0.9)" }}
         >
           Piece Casper Back Together
         </h2>
-        <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm font-bold text-white/85">
+        <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-full border border-white/20 bg-black/70 px-5 py-2 text-sm sm:text-base md:text-lg font-bold text-white shadow-[0_4px_24px_rgba(0,0,0,0.6)] backdrop-blur-md">
           <span
-            className={`flex items-center gap-1.5 transition-colors ${
-              timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-extrabold animate-pulse" : ""
+            className={`flex items-center gap-2 transition-colors ${
+              timeLeftMs <= 10000 && startedAt !== null ? "text-[#ff5c7a] font-black animate-pulse" : ""
             }`}
           >
-            <Timer className="h-4 w-4" style={{ color: timeLeftMs <= 10000 && startedAt !== null ? "#ff5c7a" : ACCENT }} />
+            <Timer className="h-5 w-5" style={{ color: timeLeftMs <= 10000 && startedAt !== null ? "#ff5c7a" : ACCENT }} />
             {formatCountdown(timeLeftMs)}
           </span>
-          <span>
+          <span className="font-extrabold">
             {placedCount}/{pieces.length} pieces
           </span>
-          <span className={`transition-colors ${movesLeft <= 10 ? "text-[#ff5c7a] font-extrabold" : ""}`}>
+          <span className={`transition-colors font-extrabold ${movesLeft <= 10 ? "text-[#ff5c7a] font-black" : ""}`}>
             {movesLeft} moves left
           </span>
         </div>
@@ -524,22 +524,22 @@ export default function JigsawPuzzle({ onExit }: Props) {
       )}
 
       {/* peek and restart */}
-      <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center gap-3 px-4">
+      <div className="absolute inset-x-0 bottom-[max(1.25rem,env(safe-area-inset-bottom))] z-20 flex justify-center gap-3 sm:gap-4 px-4">
         <button
           type="button"
           onClick={() => setPeek((v) => !v)}
           disabled={won || lost}
-          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 disabled:opacity-40 cursor-pointer"
+          className="flex items-center gap-2 rounded-full border border-white/25 bg-black/70 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 disabled:opacity-40 cursor-pointer shadow-lg"
         >
-          {peek ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+          {peek ? <EyeOff className="h-4.5 w-4.5" /> : <Eye className="h-4.5 w-4.5" />}
           {peek ? "Hide picture" : "Peek"}
         </button>
         <button
           type="button"
           onClick={restart}
-          className="flex items-center gap-2 rounded-full border border-white/20 bg-black/60 px-4 sm:px-5 py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
+          className="flex items-center gap-2 rounded-full border border-white/25 bg-black/70 px-5 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 cursor-pointer shadow-lg"
         >
-          <RotateCcw className="h-4 w-4" />
+          <RotateCcw className="h-4.5 w-4.5" />
           Shuffle
         </button>
       </div>
@@ -549,38 +549,41 @@ export default function JigsawPuzzle({ onExit }: Props) {
         {won && (
           <motion.div
             key="won-modal"
-            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
+            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/80 p-4 py-8 backdrop-blur-md sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.35 }}
           >
             <motion.div
-              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(254,215,120,0.35)]"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-[0_0_70px_rgba(254,215,120,0.4)] backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.35 }}
             >
               {/* Casper, free again */}
               <motion.div
-                className="relative mx-auto -mt-20 h-28 w-28 sm:h-32 sm:w-32 filter drop-shadow-[0_0_24px_rgba(254,215,120,0.7)]"
+                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 filter drop-shadow-[0_0_30px_rgba(254,215,120,0.85)]"
                 animate={reducedMotion ? undefined : { y: [0, -8, 0], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain" />
+                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="200px" className="object-contain" />
               </motion.div>
-              <h3 className="font-creepster mt-1 text-3xl sm:text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+              <h3
+                className="font-creepster mt-2 text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider"
+                style={{ color: ACCENT, textShadow: "0 0 25px rgba(254,215,120,0.85), 0 2px 10px rgba(0,0,0,0.9)" }}
+              >
                 Casper Is Free!
               </h3>
-              <p className="mt-2 text-sm text-[#d7cced]">
-                Solved in <span className="font-black text-white">{formatElapsed(elapsed)}</span> with{" "}
-                <span className="font-black text-white">{moves}</span> moves.
+              <p className="mt-3 text-base sm:text-lg md:text-xl text-purple-100 font-medium leading-relaxed">
+                Solved in <span className="font-black text-[#fed778]">{formatElapsed(elapsed)}</span> with{" "}
+                <span className="font-black text-[#fed778]">{moves}</span> moves.
               </p>
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-8 flex flex-col gap-3.5">
                 <button
                   type="button"
                   onClick={restart}
-                  className="w-full rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  className="w-full rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg"
                   style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
                   Play again
@@ -588,7 +591,7 @@ export default function JigsawPuzzle({ onExit }: Props) {
                 <button
                   type="button"
                   onClick={onExit}
-                  className="w-full py-1 text-sm text-[#a495bf] transition-colors hover:text-white cursor-pointer"
+                  className="w-full py-2 text-base sm:text-lg text-purple-200 transition-colors hover:text-white font-semibold cursor-pointer"
                 >
                   Back to the flavours
                 </button>
@@ -600,49 +603,52 @@ export default function JigsawPuzzle({ onExit }: Props) {
         {lost && (
           <motion.div
             key="lost-modal"
-            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
+            className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/80 p-4 py-8 backdrop-blur-md sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.2 }}
           >
             <motion.div
-              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-6 text-center shadow-[0_0_60px_rgba(255,92,122,0.35)]"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-[0_0_70px_rgba(255,92,122,0.4)] backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.2 }}
             >
               <motion.div
-                className="relative mx-auto -mt-20 h-28 w-28 sm:h-32 sm:w-32 filter drop-shadow-[0_0_24px_rgba(255,92,122,0.7)]"
+                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48 filter drop-shadow-[0_0_30px_rgba(255,92,122,0.85)]"
                 animate={reducedMotion ? undefined : { y: [0, -6, 0], rotate: [-2, 2, -2] }}
                 transition={{ duration: 3.2, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="128px" className="object-contain opacity-75 grayscale-25" />
+                <Image src={CASPER_SRC} alt="Casper, the custard ghost" fill sizes="200px" className="object-contain opacity-75 grayscale-25" />
               </motion.div>
-              <h3 className="font-creepster mt-1 text-3xl sm:text-4xl uppercase tracking-wider text-[#ff5c7a]">
+              <h3
+                className="font-creepster mt-2 text-3xl sm:text-4xl md:text-5xl uppercase tracking-wider text-[#ff5c7a]"
+                style={{ textShadow: "0 0 25px rgba(255,92,122,0.85), 0 2px 10px rgba(0,0,0,0.9)" }}
+              >
                 {lostReason === "time" ? "Time's Up!" : "Out of Moves!"}
               </h3>
-              <p className="mt-2 text-sm text-[#d7cced]">
+              <p className="mt-3 text-base sm:text-lg md:text-xl text-rose-100 font-medium leading-relaxed">
                 {lostReason === "time"
                   ? "Time ran out before Casper could be pieced together!"
                   : "You used all 50 moves before finishing the puzzle!"}
                 <br />
                 Placed <span className="font-black text-white">{placedCount}/{pieces.length}</span> pieces.
               </p>
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-8 flex flex-col gap-3.5">
                 <button
                   type="button"
                   onClick={restart}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg"
                   style={{ background: "linear-gradient(135deg, #fed778 0%, #ff8ab2 100%)", color: "#241a33", textShadow: "none" }}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-5 w-5" />
                   Try again
                 </button>
                 <button
                   type="button"
                   onClick={onExit}
-                  className="w-full py-1 text-sm text-[#a495bf] transition-colors hover:text-white cursor-pointer"
+                  className="w-full py-2 text-base sm:text-lg text-purple-200 transition-colors hover:text-white font-semibold cursor-pointer"
                 >
                   Back to the flavours
                 </button>

@@ -18,33 +18,33 @@ export default function IntroScreen({ busy = false, onStart }: Props) {
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
       >
         <h1
-          className="font-creepster mt-2 text-center text-2xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] sm:text-4xl select-none"
+          className="font-creepster mt-2 text-center text-3xl sm:text-5xl md:text-6xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)] select-none"
           style={{
             color: "#ff7cbe",
-            textShadow: "0 0 24px rgba(255, 124, 190, 0.5), 0 2px 10px rgba(0,0,0,0.9)",
+            textShadow: "0 0 25px rgba(255, 124, 190, 0.7), 0 2px 10px rgba(0,0,0,0.9)",
           }}
         >
           {copy.title}
         </h1>
-        <p className="mt-1 max-w-xs text-xs sm:text-sm text-(--g-muted) [@media(max-height:700px)]:hidden">{copy.tagline}</p>
+        <p className="mt-2 max-w-sm text-sm sm:text-base md:text-lg text-white font-medium [@media(max-height:700px)]:hidden drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">{copy.tagline}</p>
       </motion.header>
 
       <motion.section
-        className="game__panel border-0! mx-auto w-full max-w-md p-4 sm:p-5 mb-4 sm:mb-6"
+        className="game__panel border-0! mx-auto w-full max-w-md sm:max-w-lg p-5 sm:p-7 mb-4 sm:mb-6"
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6, delay: 0.15, ease: [0.22, 1, 0.36, 1] }}
       >
-        <div className="flex flex-col items-center gap-2.5 sm:gap-3">
+        <div className="flex flex-col items-center gap-3 sm:gap-4">
           <button
             type="button"
-            className="game__button w-full cursor-pointer bg-[#ff7cbe] text-[#1a0b26] font-black shadow-[0_0_32px_rgba(255,124,190,0.55)] hover:bg-[#ff5faf] py-3 text-base sm:text-lg"
+            className="game__button w-full cursor-pointer bg-[#ff7cbe] text-[#1a0b26] font-black shadow-[0_0_32px_rgba(255,124,190,0.55)] hover:bg-[#ff5faf] py-4 text-lg sm:text-xl"
             onClick={onStart}
             disabled={busy}
           >
             {copy.start}
           </button>
-          <p className="text-center text-[11px] sm:text-xs text-(--g-muted)/80 leading-normal px-2">{copy.hygiene}</p>
+          <p className="text-center text-xs sm:text-sm text-white/90 leading-normal px-2 font-medium">{copy.hygiene}</p>
         </div>
       </motion.section>
     </div>

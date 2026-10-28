@@ -316,33 +316,33 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <MuteButton muted={muted} onToggle={toggleMute} />
 
       {/* title and stats */}
-      <div className="pointer-events-none absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1 px-14 sm:px-16">
+      <div className="pointer-events-none absolute inset-x-0 top-[max(0.75rem,env(safe-area-inset-top))] z-20 flex flex-col items-center gap-1.5 px-14 sm:px-16">
         <h2
-          className="font-creepster text-center text-xl sm:text-2xl md:text-3xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
-          style={{ color: ACCENT }}
+          className="font-creepster text-center text-2xl sm:text-3xl md:text-4xl uppercase tracking-wider drop-shadow-[0_2px_12px_rgba(0,0,0,0.8)]"
+          style={{ color: "#f3d0ff", textShadow: "0 0 20px rgba(192,132,252,0.7), 0 2px 10px rgba(0,0,0,0.9)" }}
         >
           The Beast&apos;s Cup Shuffle
         </h2>
-        <div className="flex h-auto flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs sm:text-sm font-bold text-white/90 drop-shadow-[0_1px_6px_rgba(0,0,0,0.9)]">
+        <div className="flex h-auto flex-wrap items-center justify-center gap-x-5 gap-y-1.5 rounded-full border border-white/20 bg-black/70 px-5 py-2 text-sm sm:text-base md:text-lg font-bold text-white shadow-[0_4px_24px_rgba(0,0,0,0.6)] backdrop-blur-md">
           {phase === "memorize" && (
-            <span className="flex items-center gap-1.5">
-              <Eye className="h-4 w-4" style={{ color: ACCENT }} />
-              Memorise the order · {memLeft}s
+            <span className="flex items-center gap-2">
+              <Eye className="h-5 w-5" style={{ color: ACCENT }} />
+              Memorise the order · <span className="font-black text-[#ffd166]">{memLeft}s</span>
             </span>
           )}
-          {phase === "haunt" && <span className="text-[#e9b8ff]">The Beast is snatching the cups…</span>}
+          {phase === "haunt" && <span className="text-[#f1d0ff] font-bold">The Beast is snatching the cups…</span>}
           {(arranging || phase === "won" || phase === "lost") && (
             <>
-              <span className="flex items-center gap-1" aria-label={`${lives} chance left`}>
+              <span className="flex items-center gap-1.5" aria-label={`${lives} chance left`}>
                 {Array.from({ length: LIVES }, (_, i) => (
                   <Heart
                     key={i}
-                    className="h-4 w-4 transition-all"
+                    className="h-5 w-5 transition-all"
                     style={{ color: ACCENT, fill: i < lives ? ACCENT : "transparent", opacity: i < lives ? 1 : 0.35 }}
                   />
                 ))}
               </span>
-              <span>
+              <span className="font-extrabold text-white">
                 {filled}/{CUPS} cups
               </span>
             </>
@@ -460,8 +460,8 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                     )}
 
                     <span
-                      className="absolute left-1/2 z-10 -translate-x-1/2 font-black leading-none text-white/55 drop-shadow-[0_1px_3px_rgba(0,0,0,0.9)]"
-                      style={{ top: h + coaster.h * 0.6, fontSize: Math.max(10, w * 0.17) }}
+                      className="absolute left-1/2 z-10 -translate-x-1/2 font-black leading-none text-white drop-shadow-[0_2px_5px_rgba(0,0,0,1)] select-none"
+                      style={{ top: h + coaster.h * 0.58, fontSize: Math.max(14, w * 0.22) }}
                     >
                       {i + 1}
                     </span>
@@ -562,7 +562,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={haunt}
-                className="rounded-full border border-white/20 bg-black/60 px-5 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-bold text-white/90 backdrop-blur-md transition-colors hover:bg-black/80 cursor-pointer"
+                className="rounded-full border border-white/25 bg-black/70 px-6 sm:px-8 py-2.5 sm:py-3 text-sm sm:text-base font-extrabold text-white backdrop-blur-md transition-all hover:bg-black/90 hover:scale-103 cursor-pointer shadow-lg"
               >
                 I&apos;ve got it — bring on the Beast!
               </button>
@@ -571,7 +571,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
 
           {showTray && (
             <div className="rounded-2xl border border-white/10 bg-black/55 px-3 pb-2 pt-1.5 backdrop-blur-md">
-              <p className="mb-1 text-center text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d1b8eb]/80">
+              <p className="mb-2 text-center text-xs sm:text-sm md:text-base font-black uppercase tracking-wider text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">
                 {arranging ? "Tap cups in order (1 to 8) to restore the table" : "…"}
               </p>
               <div className="grid min-h-12 grid-cols-8 gap-1 sm:gap-2">
@@ -609,10 +609,10 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
               type="button"
               onClick={checkOrder}
               disabled={filled < CUPS || wrong.length > 0}
-              className="flex items-center gap-1.5 sm:gap-2 rounded-full px-4 sm:px-6 py-2 sm:py-2.5 text-xs sm:text-sm font-black text-[#1d0d33] shadow-[0_0_25px_rgba(192,132,252,0.5)] transition-all hover:scale-103 disabled:opacity-40 disabled:shadow-none disabled:hover:scale-100 cursor-pointer disabled:cursor-default"
+              className="flex items-center gap-2 rounded-full px-5 sm:px-7 py-2.5 sm:py-3 text-sm sm:text-base md:text-lg font-black text-[#1d0d33] shadow-[0_0_25px_rgba(192,132,252,0.6)] transition-all hover:scale-103 disabled:opacity-40 disabled:shadow-none disabled:hover:scale-100 cursor-pointer disabled:cursor-default"
               style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)` }}
             >
-              <Check className="h-3.5 w-3.5 sm:h-4 sm:w-4" strokeWidth={3} />
+              <Check className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={3} />
               Check order
             </button>
           </div>
@@ -623,38 +623,48 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <AnimatePresence>
         {phase === "intro" && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/80 p-4 py-8 backdrop-blur-md sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
           >
             <motion.div
-              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center shadow-[0_0_60px_rgba(192,132,252,0.35)]"
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center shadow-[0_0_80px_rgba(192,132,252,0.45)] backdrop-blur-md"
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18 }}
             >
               <motion.div
-                className="relative mx-auto -mt-16 sm:-mt-20 size-32 sm:size-40"
+                className="relative mx-auto -mt-20 sm:-mt-24 md:-mt-28 size-36 sm:size-44 md:size-48"
                 animate={{ y: [0, -8, 0], rotate: [-3, 3, -3] }}
                 transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
               >
-                <Image src={GHOST} alt="The Horned Beast" fill sizes="160px" priority className="object-contain drop-shadow-[0_0_25px_rgba(192,132,252,0.8)]" />
+                <Image src={GHOST} alt="The Horned Beast" fill sizes="200px" priority className="object-contain drop-shadow-[0_0_30px_rgba(192,132,252,0.85)]" />
               </motion.div>
-              <h3 className="font-creepster mt-1 text-3xl uppercase tracking-wider" style={{ color: ACCENT }}>
+              <h3
+                className="font-creepster mt-2 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider"
+                style={{ color: "#f3d0ff", textShadow: "0 0 25px rgba(192,132,252,0.85), 0 2px 12px rgba(0,0,0,0.9)" }}
+              >
                 Mind the Cups!
               </h3>
-              <p className="mt-3 text-sm leading-relaxed text-[#e6d8f5]">
+              <p className="mt-4 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-white drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
                 Eight MilkaBoo cups sit on the castle table. Memorise their order row by row. Then the Horned Beast swoops in
                 and snatches them all!
               </p>
-              <p className="mt-2 text-sm leading-relaxed text-[#e6d8f5]">
-                Put every cup back in the <span className="font-black" style={{ color: ACCENT }}>exact order (1 to 8)</span>. You have{" "}
-                <span className="font-black" style={{ color: ACCENT }}>{LIVES} try</span>.
+              <p className="mt-3 text-base sm:text-lg md:text-xl font-medium leading-relaxed text-[#f1e6ff] drop-shadow-[0_1px_4px_rgba(0,0,0,0.8)]">
+                Put every cup back in the{" "}
+                <span className="font-black text-[#ffd166] drop-shadow-[0_0_12px_rgba(255,209,102,0.7)]">
+                  exact order (1 to 8)
+                </span>
+                . You have{" "}
+                <span className="font-black text-[#ffd166] drop-shadow-[0_0_12px_rgba(255,209,102,0.7)]">
+                  {LIVES} try
+                </span>
+                .
               </p>
-              <div className="mt-4 flex justify-center gap-3">
+              <div className="mt-6 flex justify-center gap-3 sm:gap-4 md:gap-5">
                 {FLAVOURS.map((f, i) => (
-                  <div key={f.name} className="w-9">
+                  <div key={f.name} className="w-12 sm:w-14 md:w-16">
                     <CupArt cup={i} />
                   </div>
                 ))}
@@ -662,7 +672,7 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
               <button
                 type="button"
                 onClick={start}
-                className="mt-6 w-full rounded-full py-3.5 font-black uppercase tracking-wider shadow-[0_0_24px_rgba(192,132,252,0.5)] transition-transform hover:scale-103 active:scale-95 cursor-pointer"
+                className="mt-8 w-full rounded-full py-4 sm:py-4.5 text-base sm:text-lg md:text-xl font-black uppercase tracking-wider shadow-[0_0_30px_rgba(192,132,252,0.6)] transition-all hover:scale-103 active:scale-95 cursor-pointer"
                 style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)`, color: "#1d0d33", textShadow: "none" }}
               >
                 Show me the cups
@@ -676,28 +686,31 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
       <AnimatePresence>
         {(phase === "won" || phase === "lost") && (
           <motion.div
-            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/75 p-4 py-8 backdrop-blur-sm sm:p-6"
+            className="absolute inset-0 z-40 flex items-center justify-center overflow-y-auto bg-black/80 p-4 py-8 backdrop-blur-md sm:p-6"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ delay: 0.6 }}
           >
             <motion.div
-              className="w-full max-w-sm sm:max-w-md rounded-3xl border border-white/15 bg-[#1b0f2e]/95 p-5 sm:p-6 text-center"
-              style={{ boxShadow: `0 0 60px ${phase === "won" ? "rgba(192,132,252,0.4)" : "rgba(255,59,92,0.3)"}` }}
+              className="w-full max-w-md sm:max-w-xl md:max-w-2xl rounded-3xl border border-white/20 bg-[#190d2e]/98 p-6 sm:p-9 md:p-10 text-center"
+              style={{ boxShadow: `0 0 70px ${phase === "won" ? "rgba(192,132,252,0.45)" : "rgba(255,59,92,0.4)"}` }}
               initial={{ scale: 0.85, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               transition={{ type: "spring", stiffness: 240, damping: 18, delay: 0.6 }}
             >
               {phase === "won" ? (
                 <>
-                  <Trophy className="mx-auto h-12 w-12" style={{ color: ACCENT }} />
-                  <h3 className="font-creepster mt-3 text-4xl uppercase tracking-wider" style={{ color: ACCENT }}>
+                  <Trophy className="mx-auto h-14 w-14 sm:h-16 sm:w-16" style={{ color: ACCENT }} />
+                  <h3
+                    className="font-creepster mt-4 text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider"
+                    style={{ color: "#f3d0ff", textShadow: "0 0 25px rgba(192,132,252,0.85), 0 2px 12px rgba(0,0,0,0.9)" }}
+                  >
                     Beast Banished!
                   </h3>
-                  <p className="mt-2 text-sm text-[#d7cced]">
-                    You restored all {CUPS} cups in{" "}
-                    <span className="font-black text-white">
+                  <p className="mt-3 text-base sm:text-lg md:text-xl text-purple-100 font-medium leading-relaxed">
+                    You restored all <span className="font-black text-white">{CUPS} cups</span> in{" "}
+                    <span className="font-black text-[#ffd166]">
                       {tries} {tries === 1 ? "try" : "tries"}
                     </span>
                     . The Blackcurrant Beast cup is free!
@@ -705,27 +718,32 @@ export default function BlackcurrantBeastGame({ onClose }: Props) {
                 </>
               ) : (
                 <>
-                  <h3 className="font-creepster text-4xl uppercase tracking-wider text-[#ff3b5c]">The Beast Wins!</h3>
-                  <p className="mt-2 text-sm text-[#f8d7dc]">
+                  <h3
+                    className="font-creepster text-4xl sm:text-5xl md:text-6xl uppercase tracking-wider text-[#ff3b5c]"
+                    style={{ textShadow: "0 0 25px rgba(255,59,92,0.85), 0 2px 12px rgba(0,0,0,0.9)" }}
+                  >
+                    The Beast Wins!
+                  </h3>
+                  <p className="mt-3 text-base sm:text-lg md:text-xl text-rose-100 font-medium leading-relaxed">
                     That&apos;s the order you were looking for. Have another look and try again!
                   </p>
                 </>
               )}
-              <div className="mt-6 flex flex-col gap-3">
+              <div className="mt-8 flex flex-col gap-3.5">
                 <button
                   type="button"
                   onClick={start}
-                  className="flex w-full items-center justify-center gap-2 rounded-full py-3 font-black transition-transform hover:scale-103 cursor-pointer"
+                  className="flex w-full items-center justify-center gap-2 rounded-full py-4 text-base sm:text-lg md:text-xl font-black transition-all hover:scale-103 cursor-pointer shadow-lg"
                   style={{ background: `linear-gradient(135deg, ${ACCENT} 0%, #ff8ab2 100%)`, color: "#1d0d33", textShadow: "none" }}
                 >
-                  <RotateCcw className="h-4 w-4" />
+                  <RotateCcw className="h-5 w-5" />
                   {phase === "won" ? "Play again" : "Try again"}
                 </button>
                 {onClose && (
                   <button
                     type="button"
                     onClick={onClose}
-                    className="w-full py-1 text-sm text-[#a495bf] transition-colors hover:text-white cursor-pointer"
+                    className="w-full py-2 text-base sm:text-lg text-purple-200 transition-colors hover:text-white font-semibold cursor-pointer"
                   >
                     Back to the flavours
                   </button>
